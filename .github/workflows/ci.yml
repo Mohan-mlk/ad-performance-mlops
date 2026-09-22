@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Monday 03:00 IST - retrain check runs before the week's media planning.
+    - cron: "30 21 * * 0"
+
+env:
+  PYTHONPATH: src
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Lint
+        run: ruff check src tests
+      - name: Unit tests
+        run: pytest tests/ -q --junitxml=test-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.xml
+
+  train-and-gate:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Build dataset
+        run: |
+          python -m adperf.data.generate --rows 24000
+          python -m adperf.features.build
+
+      - name: Train
+        run: python -m adperf.models.train
+
+      - name: Rolling-origin backtest
+        # Promotion is decided here, not on the single hold-out split. One
+        # 90-day window swings by more than the differences being judged, so
+        # gating on it produces flaky CI and false confidence.
+        run: python -m adperf.models.backtest
+
+      - name: Quality gate
+        # A model that cannot beat "use the category average" must never ship,
+        # and a collapse in ranking quality is worse than a bad MAE: the whole
+        # product is ordering ad sets by expected return. Thresholds sit roughly
+        # two standard deviations below observed fold means, so ordinary noise
+        # does not redden the build.
+        run: |
+          python - <<'PY'
+          import json, sys
+          b = json.load(open("artifacts/backtest_summary.json"))
+          checks = {
+              "beats category baseline by >=5% MAE": b["mae_improvement_vs_category_pct"] >= 5.0,
+              "beats baseline in all but one fold": b["folds_beating_baseline"] >= b["n_folds"] - 1,
+              "mean rank correlation >= 0.20": b["spearman_mean"] >= 0.20,
+              "mean top-20% lift >= 1.40x": b["top20_lift_mean"] >= 1.40,
+              "mean high-performer AUC >= 0.58": b["high_performer_auc_mean"] >= 0.58,
+          }
+          for name, ok in checks.items():
+              print(("PASS  " if ok else "FAIL  ") + name)
+          if not all(checks.values()):
+              sys.exit("quality gate failed - model not promoted")
+          print("\nquality gate passed")
+          PY
+
+      - name: Generate insights and drift report
+        run: |
+          python -m adperf.insights.marketing
+          python -m adperf.monitoring.drift
+
+      - name: Fail the build if monitoring demands a retrain
+        run: |
+          python - <<'PY'
+          import json, sys
+          v = json.load(open("artifacts/drift_report.json"))["verdict"]
+          print(f"{v['action']}: {v['reason']}")
+          if v["action"] in ("RETRAIN_NOW", "INVESTIGATE"):
+              sys.exit("monitoring verdict requires human review")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: model-artifacts
+          path: |
+            artifacts/model.joblib
+            artifacts/metrics.json
+            artifacts/insights.json
+            artifacts/drift_report.json
+            artifacts/feature_importance.csv
+            artifacts/backtest_summary.json
+
+  docker:
+    needs: train-and-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: model-artifacts
+          path: artifacts
+      - name: Build image
+        run: docker build -t asr-adperf:${{ github.sha }} .
+      - name: Smoke-test the container
+        run: |
+          docker run -d --name api -p 8000:8000 asr-adperf:${{ github.sha }}
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/ready; then break; fi
+            sleep 2
+          done
+          curl -sf -X POST http://localhost:8000/predict \
+            -H 'Content-Type: application/json' \
+            -d '{"product_category":"gold_coin","geo":"vijayawada","creative_language":"telugu","planned_budget_inr":25000}' \
+            | tee /dev/stderr | grep -q predicted_roas
+          docker rm -f api
