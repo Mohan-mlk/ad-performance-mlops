@@ -1,0 +1,216 @@
+{
+  "feature_drift": [
+    {
+      "feature": "hist_ctr_creative_lang",
+      "type": "numeric",
+      "psi": 10.5871,
+      "ks_p_value": 3.4238394864465224e-52,
+      "status": "ALERT"
+    },
+    {
+      "feature": "gold_price_per_gram",
+      "type": "numeric",
+      "psi": 9.5346,
+      "ks_p_value": 4.793265745286953e-55,
+      "status": "ALERT"
+    },
+    {
+      "feature": "gold_price_momentum_30d",
+      "type": "numeric",
+      "psi": 8.7697,
+      "ks_p_value": 3.910875997300675e-59,
+      "status": "ALERT"
+    },
+    {
+      "feature": "week_of_year",
+      "type": "numeric",
+      "psi": 6.2651,
+      "ks_p_value": 9.720131252029663e-09,
+      "status": "SEASONAL"
+    },
+    {
+      "feature": "hist_roas_platform_format",
+      "type": "numeric",
+      "psi": 4.8875,
+      "ks_p_value": 5.573775097258028e-22,
+      "status": "ALERT"
+    },
+    {
+      "feature": "hist_roas_category",
+      "type": "numeric",
+      "psi": 4.0311,
+      "ks_p_value": 1.599891186659647e-21,
+      "status": "ALERT"
+    },
+    {
+      "feature": "days_to_festival",
+      "type": "numeric",
+      "psi": 2.9491,
+      "ks_p_value": 8.902446534259837e-12,
+      "status": "SEASONAL"
+    },
+    {
+      "feature": "hist_roas_campaign",
+      "type": "numeric",
+      "psi": 2.8009,
+      "ks_p_value": 7.657977886064383e-14,
+      "status": "ALERT"
+    },
+    {
+      "feature": "month",
+      "type": "numeric",
+      "psi": 1.1336,
+      "ks_p_value": 2.6044538802242395e-06,
+      "status": "SEASONAL"
+    },
+    {
+      "feature": "product_category",
+      "type": "categorical",
+      "psi": 0.4226,
+      "ks_p_value": NaN,
+      "status": "ALERT"
+    },
+    {
+      "feature": "audience_size_lakh",
+      "type": "numeric",
+      "psi": 0.3023,
+      "ks_p_value": 0.11045753881127686,
+      "status": "ALERT"
+    },
+    {
+      "feature": "bid_strategy",
+      "type": "categorical",
+      "psi": 0.2991,
+      "ks_p_value": NaN,
+      "status": "ALERT"
+    },
+    {
+      "feature": "audience_segment",
+      "type": "categorical",
+      "psi": 0.1997,
+      "ks_p_value": NaN,
+      "status": "WATCH"
+    },
+    {
+      "feature": "geo",
+      "type": "categorical",
+      "psi": 0.1847,
+      "ks_p_value": NaN,
+      "status": "WATCH"
+    },
+    {
+      "feature": "platform",
+      "type": "categorical",
+      "psi": 0.1536,
+      "ks_p_value": NaN,
+      "status": "WATCH"
+    },
+    {
+      "feature": "creative_format",
+      "type": "categorical",
+      "psi": 0.1489,
+      "ks_p_value": NaN,
+      "status": "WATCH"
+    },
+    {
+      "feature": "festival_window",
+      "type": "categorical",
+      "psi": 0.1117,
+      "ks_p_value": NaN,
+      "status": "SEASONAL"
+    },
+    {
+      "feature": "gender_target",
+      "type": "categorical",
+      "psi": 0.1092,
+      "ks_p_value": NaN,
+      "status": "WATCH"
+    },
+    {
+      "feature": "active_days",
+      "type": "numeric",
+      "psi": 0.099,
+      "ks_p_value": 0.11090704777779184,
+      "status": "STABLE"
+    },
+    {
+      "feature": "planned_budget_inr",
+      "type": "numeric",
+      "psi": 0.0954,
+      "ks_p_value": 0.039538193913273886,
+      "status": "STABLE"
+    },
+    {
+      "feature": "weekend_share",
+      "type": "numeric",
+      "psi": 0.0706,
+      "ks_p_value": 0.03054360888351547,
+      "status": "STABLE"
+    },
+    {
+      "feature": "creative_age_days",
+      "type": "numeric",
+      "psi": 0.053,
+      "ks_p_value": 0.06672887185873291,
+      "status": "STABLE"
+    },
+    {
+      "feature": "payday_share",
+      "type": "numeric",
+      "psi": 0.0293,
+      "ks_p_value": 0.9625904754121669,
+      "status": "STABLE"
+    },
+    {
+      "feature": "creative_language",
+      "type": "categorical",
+      "psi": 0.0263,
+      "ks_p_value": NaN,
+      "status": "STABLE"
+    },
+    {
+      "feature": "age_bracket",
+      "type": "categorical",
+      "psi": 0.0084,
+      "ks_p_value": NaN,
+      "status": "STABLE"
+    }
+  ],
+  "target_drift": {
+    "reference_mean_roas": 8.031,
+    "current_mean_roas": 7.231,
+    "mean_shift_pct": -9.97,
+    "psi": 0.0686,
+    "ks_p_value": 0.476301299640272
+  },
+  "performance": {
+    "baseline_mae": 5.3312,
+    "live_mae": 5.6434,
+    "mae_degradation_pct": 5.86
+  },
+  "verdict": {
+    "action": "RETRAIN_SOON",
+    "reason": "inputs have shifted materially; error has not degraded yet but it will",
+    "alert_features": [
+      "hist_ctr_creative_lang",
+      "gold_price_per_gram",
+      "gold_price_momentum_30d",
+      "hist_roas_platform_format",
+      "hist_roas_category",
+      "hist_roas_campaign",
+      "product_category",
+      "audience_size_lakh",
+      "bid_strategy"
+    ],
+    "watch_features": [
+      "audience_segment",
+      "geo",
+      "platform",
+      "creative_format",
+      "gender_target"
+    ],
+    "checked_at": "2026-09-23T08:26:58.862252+00:00"
+  },
+  "reference_rows": 422,
+  "current_rows": 184
+}

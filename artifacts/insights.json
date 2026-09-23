@@ -1,0 +1,690 @@
+{
+  "generated_at": "2026-09-23T08:26:47.968614+00:00",
+  "dimension_uplift": {
+    "product_category": [
+      {
+        "level": "gold_coin",
+        "predicted_roas": 9.983514388081465,
+        "lift_vs_average_pct": 56.86071920205171,
+        "dimension": "product_category"
+      },
+      {
+        "level": "bridal_set",
+        "predicted_roas": 8.552610621855397,
+        "lift_vs_average_pct": 34.37839632914616,
+        "dimension": "product_category"
+      },
+      {
+        "level": "gold_chain",
+        "predicted_roas": 6.903476052373,
+        "lift_vs_average_pct": 8.467236734004224,
+        "dimension": "product_category"
+      },
+      {
+        "level": "bangles_kada",
+        "predicted_roas": 5.965486579572916,
+        "lift_vs_average_pct": -6.270429541413369,
+        "dimension": "product_category"
+      },
+      {
+        "level": "daily_wear_gold",
+        "predicted_roas": 5.588331088203446,
+        "lift_vs_average_pct": -12.19628684251025,
+        "dimension": "product_category"
+      },
+      {
+        "level": "temple_jewellery",
+        "predicted_roas": 5.5093548930644385,
+        "lift_vs_average_pct": -13.437158772753133,
+        "dimension": "product_category"
+      },
+      {
+        "level": "silver_article",
+        "predicted_roas": 4.401058677588449,
+        "lift_vs_average_pct": -30.850680173194988,
+        "dimension": "product_category"
+      },
+      {
+        "level": "diamond_ring",
+        "predicted_roas": 4.012748670545293,
+        "lift_vs_average_pct": -36.95179693533033,
+        "dimension": "product_category"
+      }
+    ],
+    "creative_language": [
+      {
+        "level": "telugu",
+        "predicted_roas": 6.760963943137829,
+        "lift_vs_average_pct": 7.109078095053412,
+        "dimension": "creative_language"
+      },
+      {
+        "level": "telugu_english_mix",
+        "predicted_roas": 6.2294638858194356,
+        "lift_vs_average_pct": -1.3110941800290155,
+        "dimension": "creative_language"
+      },
+      {
+        "level": "english",
+        "predicted_roas": 5.946241396608786,
+        "lift_vs_average_pct": -5.797983915024374,
+        "dimension": "creative_language"
+      }
+    ],
+    "creative_format": [
+      {
+        "level": "reel",
+        "predicted_roas": 7.559734107504117,
+        "lift_vs_average_pct": 18.098220490190297,
+        "dimension": "creative_format"
+      },
+      {
+        "level": "short_video",
+        "predicted_roas": 7.53062667163632,
+        "lift_vs_average_pct": 17.64350391813427,
+        "dimension": "creative_format"
+      },
+      {
+        "level": "carousel",
+        "predicted_roas": 6.601996125102683,
+        "lift_vs_average_pct": 3.1364308545998476,
+        "dimension": "creative_format"
+      },
+      {
+        "level": "long_video",
+        "predicted_roas": 5.181260415656643,
+        "lift_vs_average_pct": -19.0583125962172,
+        "dimension": "creative_format"
+      },
+      {
+        "level": "static_image",
+        "predicted_roas": 5.1325131540647355,
+        "lift_vs_average_pct": -19.81984266670731,
+        "dimension": "creative_format"
+      }
+    ],
+    "platform": [
+      {
+        "level": "youtube",
+        "predicted_roas": 6.685153091419846,
+        "lift_vs_average_pct": 3.400368851857971,
+        "dimension": "platform"
+      },
+      {
+        "level": "meta_facebook",
+        "predicted_roas": 6.641474677305135,
+        "lift_vs_average_pct": 2.72478759462067,
+        "dimension": "platform"
+      },
+      {
+        "level": "google_search",
+        "predicted_roas": 6.483294912979081,
+        "lift_vs_average_pct": 0.27819501064436647,
+        "dimension": "platform"
+      },
+      {
+        "level": "google_pmax",
+        "predicted_roas": 6.4230913238760605,
+        "lift_vs_average_pct": -0.6529838620500494,
+        "dimension": "platform"
+      },
+      {
+        "level": "meta_instagram",
+        "predicted_roas": 6.093529727535982,
+        "lift_vs_average_pct": -5.750367595072947,
+        "dimension": "platform"
+      }
+    ],
+    "audience_segment": [
+      {
+        "level": "investment",
+        "predicted_roas": 7.407933049645036,
+        "lift_vs_average_pct": 12.338377190049599,
+        "dimension": "audience_segment"
+      },
+      {
+        "level": "bridal",
+        "predicted_roas": 7.207142843526791,
+        "lift_vs_average_pct": 9.293473063646873,
+        "dimension": "audience_segment"
+      },
+      {
+        "level": "gifting",
+        "predicted_roas": 6.300721715872463,
+        "lift_vs_average_pct": -4.452045132733307,
+        "dimension": "audience_segment"
+      },
+      {
+        "level": "daily_wear",
+        "predicted_roas": 6.089170430370068,
+        "lift_vs_average_pct": -7.660136775373994,
+        "dimension": "audience_segment"
+      },
+      {
+        "level": "festival_shopper",
+        "predicted_roas": 5.966547283050154,
+        "lift_vs_average_pct": -9.519668345589183,
+        "dimension": "audience_segment"
+      }
+    ],
+    "geo": [
+      {
+        "level": "vijayawada",
+        "predicted_roas": 8.222628554395644,
+        "lift_vs_average_pct": 35.687976567943025,
+        "dimension": "geo"
+      },
+      {
+        "level": "guntur",
+        "predicted_roas": 6.994181156317525,
+        "lift_vs_average_pct": 15.41641247348229,
+        "dimension": "geo"
+      },
+      {
+        "level": "visakhapatnam",
+        "predicted_roas": 5.493842827325769,
+        "lift_vs_average_pct": -9.341834926540649,
+        "dimension": "geo"
+      },
+      {
+        "level": "rest_of_ap_ts",
+        "predicted_roas": 4.800300481690632,
+        "lift_vs_average_pct": -20.786515532125083,
+        "dimension": "geo"
+      },
+      {
+        "level": "hyderabad",
+        "predicted_roas": 4.788815472574273,
+        "lift_vs_average_pct": -20.97603858275956,
+        "dimension": "geo"
+      }
+    ],
+    "bid_strategy": [
+      {
+        "level": "target_roas",
+        "predicted_roas": 6.962306981556831,
+        "lift_vs_average_pct": 7.728062956647985,
+        "dimension": "bid_strategy"
+      },
+      {
+        "level": "cost_cap",
+        "predicted_roas": 6.420128659061042,
+        "lift_vs_average_pct": -0.6610845794027376,
+        "dimension": "bid_strategy"
+      },
+      {
+        "level": "manual_cpc",
+        "predicted_roas": 6.338000451960123,
+        "lift_vs_average_pct": -1.9318577137275472,
+        "dimension": "bid_strategy"
+      },
+      {
+        "level": "lowest_cost",
+        "predicted_roas": 6.130978257491988,
+        "lift_vs_average_pct": -5.135120663517734,
+        "dimension": "bid_strategy"
+      }
+    ],
+    "age_bracket": [
+      {
+        "level": "25-34",
+        "predicted_roas": 6.888665588637389,
+        "lift_vs_average_pct": 10.781547488540122,
+        "dimension": "age_bracket"
+      },
+      {
+        "level": "35-44",
+        "predicted_roas": 6.781625380803104,
+        "lift_vs_average_pct": 9.060157516157584,
+        "dimension": "age_bracket"
+      },
+      {
+        "level": "45-54",
+        "predicted_roas": 6.399700625078547,
+        "lift_vs_average_pct": 2.918152955341302,
+        "dimension": "age_bracket"
+      },
+      {
+        "level": "55+",
+        "predicted_roas": 6.083642872487277,
+        "lift_vs_average_pct": -2.1645973215141168,
+        "dimension": "age_bracket"
+      },
+      {
+        "level": "18-24",
+        "predicted_roas": 4.937579479747729,
+        "lift_vs_average_pct": -20.595260638524906,
+        "dimension": "age_bracket"
+      }
+    ]
+  },
+  "language_by_geo": [
+    {
+      "creative_language": "english",
+      "geo": "guntur",
+      "predicted_roas": 6.03713630141365
+    },
+    {
+      "creative_language": "english",
+      "geo": "hyderabad",
+      "predicted_roas": 4.769953171322038
+    },
+    {
+      "creative_language": "english",
+      "geo": "rest_of_ap_ts",
+      "predicted_roas": 4.759434411099336
+    },
+    {
+      "creative_language": "english",
+      "geo": "vijayawada",
+      "predicted_roas": 7.44628384085931
+    },
+    {
+      "creative_language": "english",
+      "geo": "visakhapatnam",
+      "predicted_roas": 5.380679632766973
+    },
+    {
+      "creative_language": "telugu",
+      "geo": "guntur",
+      "predicted_roas": 7.507465010304068
+    },
+    {
+      "creative_language": "telugu",
+      "geo": "hyderabad",
+      "predicted_roas": 4.988607854673826
+    },
+    {
+      "creative_language": "telugu",
+      "geo": "rest_of_ap_ts",
+      "predicted_roas": 5.0144679752769585
+    },
+    {
+      "creative_language": "telugu",
+      "geo": "vijayawada",
+      "predicted_roas": 8.89401378700231
+    },
+    {
+      "creative_language": "telugu",
+      "geo": "visakhapatnam",
+      "predicted_roas": 5.691491480507027
+    },
+    {
+      "creative_language": "telugu_english_mix",
+      "geo": "guntur",
+      "predicted_roas": 6.540282185674348
+    },
+    {
+      "creative_language": "telugu_english_mix",
+      "geo": "hyderabad",
+      "predicted_roas": 4.85250794572124
+    },
+    {
+      "creative_language": "telugu_english_mix",
+      "geo": "rest_of_ap_ts",
+      "predicted_roas": 4.841575825684977
+    },
+    {
+      "creative_language": "telugu_english_mix",
+      "geo": "vijayawada",
+      "predicted_roas": 7.961143967706014
+    },
+    {
+      "creative_language": "telugu_english_mix",
+      "geo": "visakhapatnam",
+      "predicted_roas": 5.459849698311573
+    }
+  ],
+  "festival_timing": [
+    {
+      "days_to_festival": 0,
+      "predicted_roas": 6.760515867972725
+    },
+    {
+      "days_to_festival": 2,
+      "predicted_roas": 6.760515867972725
+    },
+    {
+      "days_to_festival": 4,
+      "predicted_roas": 6.747445791624188
+    },
+    {
+      "days_to_festival": 6,
+      "predicted_roas": 6.694830821402382
+    },
+    {
+      "days_to_festival": 8,
+      "predicted_roas": 6.636111989722426
+    },
+    {
+      "days_to_festival": 10,
+      "predicted_roas": 6.608197964737499
+    },
+    {
+      "days_to_festival": 12,
+      "predicted_roas": 6.598728381317631
+    },
+    {
+      "days_to_festival": 14,
+      "predicted_roas": 6.604715981119007
+    },
+    {
+      "days_to_festival": 16,
+      "predicted_roas": 6.6017698930023245
+    },
+    {
+      "days_to_festival": 18,
+      "predicted_roas": 6.582970883167961
+    },
+    {
+      "days_to_festival": 20,
+      "predicted_roas": 6.580647117543934
+    },
+    {
+      "days_to_festival": 22,
+      "predicted_roas": 6.563197768512841
+    },
+    {
+      "days_to_festival": 24,
+      "predicted_roas": 6.532719487574333
+    },
+    {
+      "days_to_festival": 26,
+      "predicted_roas": 6.544261101583563
+    },
+    {
+      "days_to_festival": 28,
+      "predicted_roas": 6.5530696971445295
+    },
+    {
+      "days_to_festival": 30,
+      "predicted_roas": 6.544103096961725
+    },
+    {
+      "days_to_festival": 32,
+      "predicted_roas": 6.544103096961725
+    },
+    {
+      "days_to_festival": 34,
+      "predicted_roas": 6.528349641646188
+    },
+    {
+      "days_to_festival": 36,
+      "predicted_roas": 6.533865237615387
+    },
+    {
+      "days_to_festival": 38,
+      "predicted_roas": 6.533865237615387
+    },
+    {
+      "days_to_festival": 40,
+      "predicted_roas": 6.533865237615387
+    },
+    {
+      "days_to_festival": 42,
+      "predicted_roas": 6.533094690197842
+    },
+    {
+      "days_to_festival": 44,
+      "predicted_roas": 6.528354639003515
+    },
+    {
+      "days_to_festival": 46,
+      "predicted_roas": 6.506245310498658
+    },
+    {
+      "days_to_festival": 48,
+      "predicted_roas": 6.506245310498658
+    },
+    {
+      "days_to_festival": 50,
+      "predicted_roas": 6.506245310498658
+    },
+    {
+      "days_to_festival": 52,
+      "predicted_roas": 6.506245310498658
+    },
+    {
+      "days_to_festival": 54,
+      "predicted_roas": 6.506245310498658
+    },
+    {
+      "days_to_festival": 56,
+      "predicted_roas": 6.506245310498658
+    },
+    {
+      "days_to_festival": 58,
+      "predicted_roas": 6.506245310498658
+    },
+    {
+      "days_to_festival": 60,
+      "predicted_roas": 6.506245310498658
+    }
+  ],
+  "segment_leaderboard": [
+    {
+      "product_category": "gold_coin",
+      "creative_language": "telugu",
+      "creative_format": "short_video",
+      "geo": "vijayawada",
+      "spend_inr": 588683.51,
+      "revenue_inr": 24318036.78,
+      "leads": 3059,
+      "conversions": 580,
+      "ad_weeks": 22,
+      "roas": 41.30918628925074,
+      "cost_per_lead_inr": 192.44312193527296,
+      "lead_to_sale_pct": 18.960444589735207
+    },
+    {
+      "product_category": "gold_coin",
+      "creative_language": "telugu",
+      "creative_format": "reel",
+      "geo": "guntur",
+      "spend_inr": 762908.13,
+      "revenue_inr": 29923209.33,
+      "leads": 3989,
+      "conversions": 660,
+      "ad_weeks": 12,
+      "roas": 39.222559248385515,
+      "cost_per_lead_inr": 191.25297819002256,
+      "lead_to_sale_pct": 16.5455001253447
+    },
+    {
+      "product_category": "bridal_set",
+      "creative_language": "telugu",
+      "creative_format": "reel",
+      "geo": "guntur",
+      "spend_inr": 58925.05,
+      "revenue_inr": 2301908.88,
+      "leads": 364,
+      "conversions": 7,
+      "ad_weeks": 2,
+      "roas": 39.06503057697872,
+      "cost_per_lead_inr": 161.8820054945055,
+      "lead_to_sale_pct": 1.9230769230769231
+    },
+    {
+      "product_category": "gold_coin",
+      "creative_language": "telugu",
+      "creative_format": "short_video",
+      "geo": "guntur",
+      "spend_inr": 491042.03,
+      "revenue_inr": 14676006.31,
+      "leads": 2238,
+      "conversions": 318,
+      "ad_weeks": 13,
+      "roas": 29.887474825729274,
+      "cost_per_lead_inr": 219.41109472743523,
+      "lead_to_sale_pct": 14.209115281501342
+    },
+    {
+      "product_category": "gold_coin",
+      "creative_language": "telugu",
+      "creative_format": "reel",
+      "geo": "vijayawada",
+      "spend_inr": 341213.43,
+      "revenue_inr": 10144062.02,
+      "leads": 1485,
+      "conversions": 240,
+      "ad_weeks": 24,
+      "roas": 29.729375013169907,
+      "cost_per_lead_inr": 229.77335353535352,
+      "lead_to_sale_pct": 16.161616161616163
+    },
+    {
+      "product_category": "bridal_set",
+      "creative_language": "telugu_english_mix",
+      "creative_format": "reel",
+      "geo": "vijayawada",
+      "spend_inr": 1600495.81,
+      "revenue_inr": 40805229.69,
+      "leads": 5018,
+      "conversions": 134,
+      "ad_weeks": 37,
+      "roas": 25.49536801973883,
+      "cost_per_lead_inr": 318.95093862096456,
+      "lead_to_sale_pct": 2.670386608210442
+    },
+    {
+      "product_category": "gold_coin",
+      "creative_language": "english",
+      "creative_format": "reel",
+      "geo": "hyderabad",
+      "spend_inr": 1012046.7,
+      "revenue_inr": 24546422.59,
+      "leads": 4027,
+      "conversions": 544,
+      "ad_weeks": 26,
+      "roas": 24.254239048454977,
+      "cost_per_lead_inr": 251.315296746958,
+      "lead_to_sale_pct": 13.50881549540601
+    },
+    {
+      "product_category": "gold_coin",
+      "creative_language": "telugu_english_mix",
+      "creative_format": "reel",
+      "geo": "guntur",
+      "spend_inr": 110569.14,
+      "revenue_inr": 2605056.14,
+      "leads": 395,
+      "conversions": 58,
+      "ad_weeks": 9,
+      "roas": 23.560426896691066,
+      "cost_per_lead_inr": 279.92187341772154,
+      "lead_to_sale_pct": 14.683544303797468
+    },
+    {
+      "product_category": "bridal_set",
+      "creative_language": "english",
+      "creative_format": "short_video",
+      "geo": "vijayawada",
+      "spend_inr": 573818.34,
+      "revenue_inr": 13494690.25,
+      "leads": 2165,
+      "conversions": 45,
+      "ad_weeks": 18,
+      "roas": 23.51735612005709,
+      "cost_per_lead_inr": 265.0431131639723,
+      "lead_to_sale_pct": 2.0785219399538106
+    },
+    {
+      "product_category": "bridal_set",
+      "creative_language": "telugu",
+      "creative_format": "carousel",
+      "geo": "vijayawada",
+      "spend_inr": 1405122.21,
+      "revenue_inr": 31682589.76,
+      "leads": 4473,
+      "conversions": 107,
+      "ad_weeks": 38,
+      "roas": 22.547924681939232,
+      "cost_per_lead_inr": 314.13418511066396,
+      "lead_to_sale_pct": 2.3921305611446457
+    },
+    {
+      "product_category": "bridal_set",
+      "creative_language": "telugu",
+      "creative_format": "short_video",
+      "geo": "visakhapatnam",
+      "spend_inr": 204085.73,
+      "revenue_inr": 4433507.93,
+      "leads": 634,
+      "conversions": 14,
+      "ad_weeks": 15,
+      "roas": 21.723752709216853,
+      "cost_per_lead_inr": 321.90178233438485,
+      "lead_to_sale_pct": 2.2082018927444795
+    },
+    {
+      "product_category": "daily_wear_gold",
+      "creative_language": "telugu",
+      "creative_format": "short_video",
+      "geo": "vijayawada",
+      "spend_inr": 736262.08,
+      "revenue_inr": 15788303.69,
+      "leads": 3699,
+      "conversions": 439,
+      "ad_weeks": 15,
+      "roas": 21.44386369864383,
+      "cost_per_lead_inr": 199.04354690456879,
+      "lead_to_sale_pct": 11.868072452014058
+    }
+  ],
+  "creative_fatigue": [
+    {
+      "age_bucket": "0-6d",
+      "roas": 7.74955409737846,
+      "ctr_pct": 2.020098805178347,
+      "spend_inr": 51745356.239999995
+    },
+    {
+      "age_bucket": "7-13d",
+      "roas": 7.661409940866848,
+      "ctr_pct": 1.8998124042985658,
+      "spend_inr": 32359455.259999998
+    },
+    {
+      "age_bucket": "14-20d",
+      "roas": 7.112252244838991,
+      "ctr_pct": 1.845765166525841,
+      "spend_inr": 27556165.619999997
+    },
+    {
+      "age_bucket": "21-27d",
+      "roas": 7.106568867398563,
+      "ctr_pct": 1.7965793010074498,
+      "spend_inr": 22463141.519999996
+    },
+    {
+      "age_bucket": "28-34d",
+      "roas": 6.174486968032986,
+      "ctr_pct": 1.6850179860508159,
+      "spend_inr": 17660307.9
+    },
+    {
+      "age_bucket": "35-48d",
+      "roas": 6.1990450244681545,
+      "ctr_pct": 1.6539330375918024,
+      "spend_inr": 20787642.55
+    },
+    {
+      "age_bucket": "49d+",
+      "roas": 5.570381997746359,
+      "ctr_pct": 1.5707772796041675,
+      "spend_inr": 3845305.67
+    }
+  ],
+  "recommendations": [
+    "Product Category: shift budget to 'gold_coin' (9.98x predicted, +57% vs average) and cut 'diamond_ring' (4.01x).",
+    "Creative Language: shift budget to 'telugu' (6.76x predicted, +7% vs average) and cut 'english' (5.95x).",
+    "Creative Format: shift budget to 'reel' (7.56x predicted, +18% vs average) and cut 'static_image' (5.13x).",
+    "Platform: shift budget to 'youtube' (6.69x predicted, +3% vs average) and cut 'meta_instagram' (6.09x).",
+    "Audience Segment: shift budget to 'investment' (7.41x predicted, +12% vs average) and cut 'festival_shopper' (5.97x).",
+    "Geo: shift budget to 'vijayawada' (8.22x predicted, +36% vs average) and cut 'hyderabad' (4.79x).",
+    "Bid Strategy: shift budget to 'target_roas' (6.96x predicted, +8% vs average) and cut 'lowest_cost' (6.13x).",
+    "Age Bracket: shift budget to '25-34' (6.89x predicted, +11% vs average) and cut '18-24' (4.94x).",
+    "Creative language is geo-specific, not global - best per market: guntur: telugu (+24% over english); rest_of_ap_ts: telugu (+5% over english); vijayawada: telugu (+19% over english); visakhapatnam: telugu (+6% over english).",
+    "Festival timing: the curve is flat (only 4% between best and worst lead time), so when you launch matters far less than category, geo and creative here."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "mae_mean": 5.2151,
+  "mae_std": 0.2399,
+  "rmse_mean": 8.1329,
+  "rmse_std": 1.0985,
+  "spearman_mean": 0.3961,
+  "spearman_std": 0.0862,
+  "top20_lift_mean": 1.8314,
+  "top20_lift_std": 0.198,
+  "high_performer_auc_mean": 0.6856,
+  "high_performer_auc_std": 0.0819,
+  "baseline_mae_mean": 6.1089,
+  "baseline_mae_std": 0.2937,
+  "reallocation_uplift_pct_mean": 8.8301,
+  "reallocation_uplift_pct_std": 2.656,
+  "n_folds": 6,
+  "mae_improvement_vs_category_pct": 14.63,
+  "folds_beating_baseline": 6
+}
