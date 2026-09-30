@@ -16,7 +16,7 @@
   "reallocation_moved_inr": 1004711.301,
   "reallocation_revenue_delta_inr": 8140051.128232194,
   "reallocation_uplift_pct": 10.19279459756574,
-  "train_seconds": 0.23503661155700684,
+  "train_seconds": 0.4519367218017578,
   "best_iteration": 51,
   "baseline_mean_mae": 6.096365423919249,
   "baseline_mean_rmse": 8.104041123467857,
