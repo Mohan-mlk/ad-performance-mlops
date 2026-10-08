@@ -8,6 +8,10 @@ on:
     # Monday 03:00 IST - retrain check runs before the week's media planning.
     - cron: "30 21 * * 0"
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   PYTHONPATH: src
 
@@ -105,6 +109,8 @@ jobs:
             artifacts/drift_report.json
             artifacts/feature_importance.csv
             artifacts/backtest_summary.json
+            data/processed/weekly.parquet
+            data/reference/reference_window.parquet
 
   docker:
     needs: train-and-gate
@@ -114,7 +120,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: model-artifacts
-          path: artifacts
+          path: .
       - name: Build image
         run: docker build -t asr-adperf:${{ github.sha }} .
       - name: Smoke-test the container
@@ -129,3 +135,44 @@ jobs:
             -d '{"product_category":"gold_coin","geo":"vijayawada","creative_language":"telugu","planned_budget_inr":25000}' \
             | tee /dev/stderr | grep -q predicted_roas
           docker rm -f api
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish the CI-verified image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker tag "asr-adperf:${GITHUB_SHA}" "$image:${GITHUB_SHA}"
+          docker tag "asr-adperf:${GITHUB_SHA}" "$image:latest"
+          docker push "$image:${GITHUB_SHA}"
+          docker push "$image:latest"
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render API deployment
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "Render API deploy hook is not configured; skipping deployment."
+          else
+            curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
+          fi
+      - name: Trigger Render dashboard deployment
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DASHBOARD_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "Render dashboard deploy hook is not configured; skipping deployment."
+          else
+            curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
+          fi

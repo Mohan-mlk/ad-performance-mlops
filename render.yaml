@@ -1,0 +1,25 @@
+# Render runs the exact image that passed the CI smoke test.
+# Make the GHCR package public before creating these services, or configure a
+# Render registry credential for a private package.
+services:
+  - type: web
+    name: asr-adperf-api
+    runtime: image
+    plan: free
+    region: singapore
+    image:
+      url: ghcr.io/mohan-mlk/ad-performance-mlops:latest
+    dockerCommand: sh scripts/start-api.sh
+    healthCheckPath: /ready
+    autoDeploy: false
+
+  - type: web
+    name: asr-adperf-dashboard
+    runtime: image
+    plan: free
+    region: singapore
+    image:
+      url: ghcr.io/mohan-mlk/ad-performance-mlops:latest
+    dockerCommand: sh scripts/start-dashboard.sh
+    healthCheckPath: /_stcore/health
+    autoDeploy: false

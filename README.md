@@ -27,6 +27,34 @@ make mlflow-ui     # experiment tracking on :5000
 docker compose up  # api + dashboard + mlflow together
 ```
 
+## Stable public deployment
+
+This repository includes a Render Blueprint that serves the dashboard and API
+from the same image that passes the GitHub Actions model-quality gate and API
+container smoke check.
+
+1. Push to `main`. After lint, tests, training, rolling-origin backtest, model
+   quality gates, and the container smoke check succeed, GitHub Actions pushes
+   the image to GitHub Container Registry (GHCR), tagged with the commit SHA
+   and `latest`.
+2. In GitHub, open the `ad-performance-mlops` package under your profile and
+   change its visibility to **Public**. The repository is already public and
+   the image contains only this project and its synthetic demo data/model.
+3. In Render, create a **Blueprint Instance** from this repository after the
+   image package is public. Render reads `render.yaml` and creates the API and
+   dashboard services from the GHCR image. Their URLs are listed on each
+   service page; the API docs are at the API URL plus `/docs`.
+4. Copy each service's **Deploy Hook** from its Render settings. Add GitHub
+   Actions repository secrets named `RENDER_API_DEPLOY_HOOK` and
+   `RENDER_DASHBOARD_DEPLOY_HOOK`. Later successful `main` builds publish the
+   new image and trigger both services to redeploy it.
+
+The Blueprint uses Render's free plan for a student demo. Free services can
+sleep while idle; local MLflow databases and prediction logs are not durable
+on that plan. Use a persistent managed datastore and paid always-on compute if
+you need durable production tracking or logs. Do not upload real customer or
+advertising account data to the public repository or image.
+
 ---
 
 ## What the model actually predicts
