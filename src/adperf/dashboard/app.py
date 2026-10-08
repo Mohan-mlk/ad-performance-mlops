@@ -65,6 +65,17 @@ drift = load_json("drift_report.json")
 backtest = load_json("backtest_summary.json")
 
 st.title("ASR Jewellery Works — Ad Performance & Marketing Insights")
+st.info(
+    "**Demo data only:** these forecasts use generated campaign records, not live "
+    "advertising-account data. They demonstrate the planning workflow and are not "
+    "a guarantee of future ROAS."
+)
+trained_at = pd.Timestamp(bundle["trained_at"]).tz_convert("UTC")
+st.caption(
+    f"Model trained {trained_at:%Y-%m-%d %H:%M UTC} · "
+    f"{bundle['train_rows']:,} weekly training records · "
+    f"{len(bundle['features'])} pre-launch features"
+)
 m = bundle["metrics"]
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Model MAE (ROAS)", f"{m.get('test_mae', 0):.2f}")
@@ -225,3 +236,4 @@ with tab_monitor:
             st.subheader("Rolling-origin backtest")
             st.caption("Mean ± std across walk-forward folds — the honest read on model quality.")
             st.json(backtest)
+
