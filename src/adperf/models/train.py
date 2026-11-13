@@ -13,11 +13,14 @@ the account mean, and last-period category mean. A model that cannot beat
 from __future__ import annotations
 
 import json
+import os
+import platform
 import time
 
 import joblib
 import numpy as np
 import pandas as pd
+import sklearn
 from scipy.stats import spearmanr
 from sklearn.metrics import (
     mean_absolute_error,
@@ -178,7 +181,12 @@ def train(cfg: C.TrainConfig | None = None, data_path: str | None = None) -> dic
     C.REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     train_df.to_parquet(C.REFERENCE_PATH, index=False)
 
-    _log_mlflow(model, cfg, metrics, importance, train_df)
+    mlflow_lineage = _log_mlflow(model, cfg, metrics, importance, train_df)
+    if mlflow_lineage:
+        bundle["mlflow"] = mlflow_lineage
+        # Embed the run reference in the served bundle so the public dashboard
+        # can show lineage without needing access to a private tracking server.
+        joblib.dump(bundle, C.MODEL_PATH)
 
     print("\n--- test metrics ---")
     for k in ["test_mae", "test_rmse", "test_r2", "test_spearman", "test_top20_lift",
@@ -191,45 +199,92 @@ def train(cfg: C.TrainConfig | None = None, data_path: str | None = None) -> dic
     return metrics
 
 
-def _log_mlflow(model, cfg, metrics, importance, train_df) -> None:
+def _log_mlflow(model, cfg, metrics, importance, train_df) -> dict | None:
     """Track the run. Falls back to a no-op if MLflow is unavailable in CI."""
     try:
         import mlflow
         import mlflow.lightgbm
     except ImportError:  # pragma: no cover
         print("mlflow not installed - skipping tracking")
-        return
+        return None
 
     mlflow.set_tracking_uri(C.MLFLOW_TRACKING_URI)
     mlflow.set_experiment(C.MLFLOW_EXPERIMENT)
+    params = {
+        "n_estimators": cfg.n_estimators,
+        "learning_rate": cfg.learning_rate,
+        "num_leaves": cfg.num_leaves,
+        "min_child_samples": cfg.min_child_samples,
+        "subsample": cfg.subsample,
+        "colsample_bytree": cfg.colsample_bytree,
+        "valid_days": cfg.valid_days,
+        "test_days": cfg.test_days,
+        "n_features": len(C.FEATURES),
+        "train_rows": len(train_df),
+        "dataset": "weekly.parquet",
+    }
+    dependencies = {
+        "python": platform.python_version(),
+        "mlflow": mlflow.__version__,
+        "numpy": np.__version__,
+        "pandas": pd.__version__,
+        "scikit-learn": sklearn.__version__,
+        "joblib": joblib.__version__,
+    }
+    import lightgbm
+
+    dependencies["lightgbm"] = lightgbm.__version__
+    registered_version = None
     with mlflow.start_run(run_name=f"roas-tweedie-{pd.Timestamp.now('UTC'):%Y%m%d-%H%M%S}"):
-        mlflow.set_tags({**cfg.tags, "objective": "tweedie", "grain": "adset_week"})
-        mlflow.log_params(
+        mlflow.set_tags(
             {
-                "n_estimators": cfg.n_estimators,
-                "learning_rate": cfg.learning_rate,
-                "num_leaves": cfg.num_leaves,
-                "min_child_samples": cfg.min_child_samples,
-                "subsample": cfg.subsample,
-                "colsample_bytree": cfg.colsample_bytree,
-                "valid_days": cfg.valid_days,
-                "test_days": cfg.test_days,
-                "n_features": len(C.FEATURES),
-                "train_rows": len(train_df),
+                **cfg.tags,
+                "project": "ad-performance-mlops",
+                "objective": "tweedie",
+                "grain": "adset_week",
+                "source_revision": os.getenv("GITHUB_SHA", "local"),
             }
         )
+        mlflow.log_params(params)
+        mlflow.log_params({f"dependency_{name}": version for name, version in dependencies.items()})
         mlflow.log_metrics(metrics)
         mlflow.log_artifact(str(C.ARTIFACT_DIR / "feature_importance.csv"))
         mlflow.log_artifact(str(C.METRICS_PATH))
         try:
-            mlflow.lightgbm.log_model(
+            model_info = mlflow.lightgbm.log_model(
                 model, name="model", registered_model_name=C.REGISTERED_MODEL_NAME
             )
+            registered_version = getattr(model_info, "registered_model_version", None)
         except Exception as exc:  # noqa: BLE001 - registry may be unavailable; a
             # failed registration must never lose a finished training run
             print(f"model registry skipped: {exc}")
             mlflow.lightgbm.log_model(model, name="model")
-    print(f"logged to MLflow at {C.MLFLOW_TRACKING_URI}")
+        run = mlflow.active_run()
+        run_info = run.info
+        if registered_version is None:
+            try:
+                versions = mlflow.tracking.MlflowClient().search_model_versions(
+                    f"name='{C.REGISTERED_MODEL_NAME}'"
+                )
+                matching = [version for version in versions if version.run_id == run_info.run_id]
+                if matching:
+                    registered_version = max(matching, key=lambda item: int(item.version)).version
+            except Exception:  # noqa: BLE001 - tracking still works without the registry
+                registered_version = None
+        lineage = {
+            "experiment_name": C.MLFLOW_EXPERIMENT,
+            "experiment_id": run_info.experiment_id,
+            "run_id": run_info.run_id,
+            "run_name": run_info.run_name,
+            "registered_model_name": C.REGISTERED_MODEL_NAME,
+            "registered_model_version": str(registered_version) if registered_version else None,
+            "source_revision": os.getenv("GITHUB_SHA", "local"),
+            "dataset": "weekly.parquet",
+            "dependencies": dependencies,
+            "params": params,
+        }
+    print(f"logged MLflow run {lineage['run_id']} to {C.MLFLOW_TRACKING_URI}")
+    return lineage
 
 
 if __name__ == "__main__":

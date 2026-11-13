@@ -163,16 +163,16 @@ jobs:
           DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
         run: |
           if [ -z "$DEPLOY_HOOK" ]; then
-            echo "Render API deploy hook is not configured; skipping deployment."
-          else
-            curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
+            echo "::error::Required secret RENDER_API_DEPLOY_HOOK is missing. Add the API service Deploy Hook in repository Actions secrets."
+            exit 1
           fi
+          curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
       - name: Trigger Render dashboard deployment
         env:
           DEPLOY_HOOK: ${{ secrets.RENDER_DASHBOARD_DEPLOY_HOOK }}
         run: |
           if [ -z "$DEPLOY_HOOK" ]; then
-            echo "Render dashboard deploy hook is not configured; skipping deployment."
-          else
-            curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
+            echo "::error::Required secret RENDER_DASHBOARD_DEPLOY_HOOK is missing. Add the dashboard service Deploy Hook in repository Actions secrets."
+            exit 1
           fi
+          curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"

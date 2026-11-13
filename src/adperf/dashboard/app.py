@@ -1,7 +1,8 @@
 """Streamlit dashboard for the ASR media team.
 
-Four tabs, matching four jobs: plan a campaign, split the budget, read the
-insights, and check whether the model is still trustworthy. The last tab is
+Five tabs, matching the media workflow: plan a campaign, split the budget, read
+insights, check whether the model is trustworthy, and review its MLflow lineage.
+The monitoring tab is
 deliberately in front of the business, not hidden in a Grafana no one opens --
 the people spending the money should be able to see when the model is drifting.
 
@@ -63,6 +64,7 @@ weekly = load_weekly()
 insights = load_json("insights.json")
 drift = load_json("drift_report.json")
 backtest = load_json("backtest_summary.json")
+mlflow_lineage = bundle.get("mlflow")
 
 st.title("ASR Jewellery Works — Ad Performance & Marketing Insights")
 st.info(
@@ -84,8 +86,8 @@ c3.metric("Top-20% pick lift", f"{m.get('test_top20_lift', 0):.2f}x")
 if drift:
     c4.metric("Monitoring", drift["verdict"]["action"])
 
-tab_plan, tab_budget, tab_insight, tab_monitor = st.tabs(
-    ["Campaign planner", "Budget allocator", "Marketing insights", "Model monitoring"]
+tab_plan, tab_budget, tab_insight, tab_monitor, tab_mlflow = st.tabs(
+    ["Campaign planner", "Budget allocator", "Marketing insights", "Model monitoring", "MLflow lineage"]
 )
 
 # ---------------------------------------------------------------- planner
@@ -236,4 +238,68 @@ with tab_monitor:
             st.subheader("Rolling-origin backtest")
             st.caption("Mean ± std across walk-forward folds — the honest read on model quality.")
             st.json(backtest)
+
+# ---------------------------------------------------------- MLflow lineage
+with tab_mlflow:
+    st.subheader("Training run, model registry, and project dependencies")
+    if not mlflow_lineage:
+        st.info(
+            "This model bundle predates embedded MLflow lineage. Run the training pipeline "
+            "again to attach its experiment, run, registry, and dependency details."
+        )
+    else:
+        st.caption(
+            "This information was captured from the MLflow run that produced the model "
+            "currently loaded by this dashboard."
+        )
+        with st.container(border=True):
+            st.markdown(f"**Experiment:** `{mlflow_lineage['experiment_name']}`")
+            st.markdown(f"**Run:** {mlflow_lineage['run_name']}")
+            st.code(mlflow_lineage["run_id"], language=None)
+            version = mlflow_lineage.get("registered_model_version")
+            registered = mlflow_lineage.get("registered_model_name", "not registered")
+            st.markdown(
+                f"**Registered model:** `{registered}`"
+                + (f" · **Version:** `{version}`" if version else " · registry version unavailable")
+            )
+            st.markdown(
+                f"**Dataset:** `{mlflow_lineage.get('dataset', 'unknown')}` · "
+                f"**Training rows:** {bundle['train_rows']:,} · "
+                f"**Code revision:** `{mlflow_lineage.get('source_revision', 'unknown')[:12]}`"
+            )
+
+        st.markdown("**Key evaluation metrics**")
+        score = bundle["metrics"]
+        a, b, c, d = st.columns(4)
+        a.metric("Test MAE", f"{score.get('test_mae', 0):.3f}")
+        b.metric("Test RMSE", f"{score.get('test_rmse', 0):.3f}")
+        c.metric("Spearman rank", f"{score.get('test_spearman', 0):.3f}")
+        d.metric("Top 20% lift", f"{score.get('test_top20_lift', 0):.2f}x")
+
+        left, right = st.columns(2)
+        with left:
+            st.markdown("**Training parameters**")
+            st.dataframe(
+                pd.DataFrame(
+                    mlflow_lineage.get("params", {}).items(), columns=["Parameter", "Value"]
+                ),
+                hide_index=True,
+                width="stretch",
+            )
+        with right:
+            st.markdown("**Runtime dependencies**")
+            st.dataframe(
+                pd.DataFrame(
+                    mlflow_lineage.get("dependencies", {}).items(),
+                    columns=["Package", "Version"],
+                ),
+                hide_index=True,
+                width="stretch",
+            )
+
+        st.caption(
+            "The dashboard displays lineage embedded in the deployed model bundle. "
+            "The full run history and artifacts are available in the tracking backend "
+            "used during training; local or CI tracking stores are not shared with Render."
+        )
 

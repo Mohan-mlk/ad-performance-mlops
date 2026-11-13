@@ -33,7 +33,12 @@ Every successful training run (`make train` or the training stage of
 `make pipeline`) records its parameters, validation and test metrics, feature
 importance, metrics file, and LightGBM model under the `asr-ad-performance`
 experiment. The model is registered as `asr_roas_predictor` when the registry
-is available.
+is available. The saved model bundle also includes the experiment/run IDs,
+registry version, source revision, data filename, training parameters, and
+Python/MLflow/LightGBM/numerical-library versions. The dashboard's **MLflow
+lineage** tab reads that metadata from the deployed model, so it can show which
+training flow produced its predictions without connecting to the trainer's
+local database.
 
 ### Run the full MLflow flow with Docker
 
@@ -89,8 +94,9 @@ container smoke check.
    service page; the API docs are at the API URL plus `/docs`.
 4. Copy each service's **Deploy Hook** from its Render settings. Add GitHub
    Actions repository secrets named `RENDER_API_DEPLOY_HOOK` and
-   `RENDER_DASHBOARD_DEPLOY_HOOK`. Later successful `main` builds publish the
-   new image and trigger both services to redeploy it.
+   `RENDER_DASHBOARD_DEPLOY_HOOK`. The CI deployment job fails clearly if
+   either secret is missing; successful `main` builds publish the new image
+   and trigger both services to redeploy it.
 
 The Blueprint uses Render's free plan for a student demo. Free services can
 sleep while idle; local MLflow databases and prediction logs are not durable
