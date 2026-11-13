@@ -2,8 +2,6 @@ services:
   api:
     build: .
     ports: ["8000:8000"]
-    environment:
-      MLFLOW_TRACKING_URI: sqlite:////app/mlflow.db
     volumes:
       - ./artifacts:/app/artifacts:ro
     restart: unless-stopped
@@ -20,7 +18,38 @@ services:
 
   mlflow:
     build: .
-    command: mlflow ui --backend-store-uri sqlite:////app/mlflow.db --host 0.0.0.0 --port 5000
-    ports: ["5000:5000"]
+    command: >-
+      mlflow server --backend-store-uri sqlite:////app/mlflow-data/mlflow.db
+      --artifacts-destination /app/mlflow-artifacts
+      --allowed-hosts localhost:*,127.0.0.1:*,mlflow:5000
+      --host 0.0.0.0 --port 5000
+    ports: ["${MLFLOW_PORT:-5000}:5000"]
     volumes:
-      - ./mlflow.db:/app/mlflow.db
+      - mlflow-data:/app/mlflow-data
+      - mlflow-artifacts:/app/mlflow-artifacts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  trainer:
+    build: .
+    command: python -m adperf.models.train
+    profiles: ["training"]
+    user: "0:0"
+    environment:
+      PYTHONPATH: /app/src
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./data/reference:/app/data/reference
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+volumes:
+  mlflow-data:
+  mlflow-artifacts:

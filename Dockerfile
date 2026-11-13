@@ -19,7 +19,9 @@ COPY data/reference/ ./data/reference/
 COPY data/processed/ ./data/processed/
 COPY scripts/start-api.sh scripts/start-dashboard.sh ./scripts/
 
-RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
+RUN useradd -m -u 10001 appuser \
+    && mkdir -p /app/mlflow-data /app/mlflow-artifacts \
+    && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000

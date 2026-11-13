@@ -27,6 +27,49 @@ make mlflow-ui     # experiment tracking on :5000
 docker compose up  # api + dashboard + mlflow together
 ```
 
+## Experiment tracking with MLflow
+
+Every successful training run (`make train` or the training stage of
+`make pipeline`) records its parameters, validation and test metrics, feature
+importance, metrics file, and LightGBM model under the `asr-ad-performance`
+experiment. The model is registered as `asr_roas_predictor` when the registry
+is available.
+
+### Run the full MLflow flow with Docker
+
+Docker Compose keeps the tracking database and model artifacts in persistent
+named volumes. Start the dashboard, API, and tracker, then run training as a
+one-off job that sends its metrics and artifacts to the tracker:
+
+```bash
+docker compose up --build -d
+docker compose --profile training run --build --rm trainer
+```
+
+Open `http://localhost:5000` and choose the `asr-ad-performance` experiment to
+inspect the run, compare metrics, browse artifacts, and view the registered
+model. If port 5000 is already occupied, start Compose with
+`MLFLOW_PORT=5003` (PowerShell: `$env:MLFLOW_PORT='5003'` before the commands).
+After retraining, restart the API so it reloads the updated model bundle:
+
+```bash
+docker compose restart api
+```
+
+The trainer writes the new model and monitoring reference to `artifacts/` and
+`data/reference/` in the project, while MLflow's database and run artifacts are
+kept in the `mlflow-data` and `mlflow-artifacts` Docker volumes. The VS Code
+launch configuration also includes the local MLflow UI on port 5001.
+
+For a local Python workflow, `make train` stores its MLflow database in
+`mlflow.db` and artifacts under `mlruns/`; start the UI with `make mlflow-ui`
+and open `http://localhost:5000` (or use `make mlflow-ui MLFLOW_PORT=5001`).
+
+The committed deployment bundle remains `artifacts/model.joblib`; the API
+currently loads that bundle directly at startup. MLflow records and registers
+training outputs for review, but deployment does not yet promote a registry
+version automatically.
+
 ## Stable public deployment
 
 This repository includes a Render Blueprint that serves the dashboard and API

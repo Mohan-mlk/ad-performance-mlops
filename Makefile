@@ -1,4 +1,6 @@
-.PHONY: install data features train backtest insights drift test lint api dashboard pipeline clean
+.PHONY: install data features train backtest insights drift test lint api dashboard pipeline clean mlflow-ui
+
+MLFLOW_PORT ?= 5000
 
 install:
 	pip install -r requirements.txt
@@ -37,7 +39,7 @@ dashboard:
 	PYTHONPATH=src streamlit run src/adperf/dashboard/app.py
 
 mlflow-ui:
-	mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
+	mlflow ui --backend-store-uri sqlite:///mlflow.db --host 127.0.0.1 --port $(MLFLOW_PORT)
 
 clean:
 	rm -rf artifacts/*.joblib artifacts/*.json artifacts/*.csv data/processed/* data/reference/*
