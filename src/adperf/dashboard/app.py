@@ -267,6 +267,14 @@ with tab_mlflow:
                 f"**Training rows:** {bundle['train_rows']:,} · "
                 f"**Code revision:** `{mlflow_lineage.get('source_revision', 'unknown')[:12]}`"
             )
+            lineage = mlflow_lineage.get("data_lineage", {})
+            if lineage:
+                st.caption(
+                    f"Train window {lineage['train_start'][:10]} to {lineage['train_end'][:10]} · "
+                    f"validation {lineage['validation_rows']:,} rows · "
+                    f"test {lineage['test_rows']:,} rows · "
+                    f"SHA-256 `{lineage['sha256']}`"
+                )
 
         st.markdown("**Key evaluation metrics**")
         score = bundle["metrics"]

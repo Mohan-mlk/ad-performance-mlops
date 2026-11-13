@@ -38,7 +38,9 @@ registry version, source revision, data filename, training parameters, and
 Python/MLflow/LightGBM/numerical-library versions. The dashboard's **MLflow
 lineage** tab reads that metadata from the deployed model, so it can show which
 training flow produced its predictions without connecting to the trainer's
-local database.
+local database. Each MLflow run also stores the dataset checksum and time split,
+a model input signature and example, and a holdout prediction CSV for inspecting
+actual versus predicted ROAS.
 
 ### Run the full MLflow flow with Docker
 

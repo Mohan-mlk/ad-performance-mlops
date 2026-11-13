@@ -12,10 +12,13 @@ the account mean, and last-period category mean. A model that cannot beat
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import platform
+import tempfile
 import time
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -181,7 +184,9 @@ def train(cfg: C.TrainConfig | None = None, data_path: str | None = None) -> dic
     C.REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     train_df.to_parquet(C.REFERENCE_PATH, index=False)
 
-    mlflow_lineage = _log_mlflow(model, cfg, metrics, importance, train_df)
+    mlflow_lineage = _log_mlflow(
+        model, cfg, metrics, importance, train_df, valid_df, test_df, pred_te, path
+    )
     if mlflow_lineage:
         bundle["mlflow"] = mlflow_lineage
         # Embed the run reference in the served bundle so the public dashboard
@@ -199,7 +204,9 @@ def train(cfg: C.TrainConfig | None = None, data_path: str | None = None) -> dic
     return metrics
 
 
-def _log_mlflow(model, cfg, metrics, importance, train_df) -> dict | None:
+def _log_mlflow(
+    model, cfg, metrics, importance, train_df, valid_df, test_df, pred_te, data_path: str
+) -> dict | None:
     """Track the run. Falls back to a no-op if MLflow is unavailable in CI."""
     try:
         import mlflow
@@ -210,6 +217,7 @@ def _log_mlflow(model, cfg, metrics, importance, train_df) -> dict | None:
 
     mlflow.set_tracking_uri(C.MLFLOW_TRACKING_URI)
     mlflow.set_experiment(C.MLFLOW_EXPERIMENT)
+    dataset_sha256 = hashlib.sha256(Path(data_path).read_bytes()).hexdigest()
     params = {
         "n_estimators": cfg.n_estimators,
         "learning_rate": cfg.learning_rate,
@@ -221,6 +229,8 @@ def _log_mlflow(model, cfg, metrics, importance, train_df) -> dict | None:
         "test_days": cfg.test_days,
         "n_features": len(C.FEATURES),
         "train_rows": len(train_df),
+        "validation_rows": len(valid_df),
+        "test_rows": len(test_df),
         "dataset": "weekly.parquet",
     }
     dependencies = {
@@ -230,10 +240,33 @@ def _log_mlflow(model, cfg, metrics, importance, train_df) -> dict | None:
         "pandas": pd.__version__,
         "scikit-learn": sklearn.__version__,
         "joblib": joblib.__version__,
+        "scipy": __import__("scipy").__version__,
+        "pyarrow": __import__("pyarrow").__version__,
     }
     import lightgbm
 
     dependencies["lightgbm"] = lightgbm.__version__
+    feature_example = train_df[C.FEATURES].head(3).copy()
+    signature = mlflow.models.infer_signature(
+        feature_example, model.predict(feature_example)
+    )
+    data_lineage = {
+        "dataset": "weekly.parquet",
+        "sha256": dataset_sha256,
+        "rows": len(train_df) + len(valid_df) + len(test_df),
+        "train_rows": len(train_df),
+        "validation_rows": len(valid_df),
+        "test_rows": len(test_df),
+        "target": C.TARGET,
+        "feature_count": len(C.FEATURES),
+        "features": C.FEATURES,
+        "train_start": train_df["week"].min().isoformat(),
+        "train_end": train_df["week"].max().isoformat(),
+        "validation_start": valid_df["week"].min().isoformat(),
+        "validation_end": valid_df["week"].max().isoformat(),
+        "test_start": test_df["week"].min().isoformat(),
+        "test_end": test_df["week"].max().isoformat(),
+    }
     registered_version = None
     with mlflow.start_run(run_name=f"roas-tweedie-{pd.Timestamp.now('UTC'):%Y%m%d-%H%M%S}"):
         mlflow.set_tags(
@@ -243,16 +276,36 @@ def _log_mlflow(model, cfg, metrics, importance, train_df) -> dict | None:
                 "objective": "tweedie",
                 "grain": "adset_week",
                 "source_revision": os.getenv("GITHUB_SHA", "local"),
+                "dataset_sha256": dataset_sha256,
             }
         )
         mlflow.log_params(params)
         mlflow.log_params({f"dependency_{name}": version for name, version in dependencies.items()})
         mlflow.log_metrics(metrics)
+        mlflow.log_dict(data_lineage, "lineage/data.json")
+        mlflow.log_dict(
+            {
+                "signature": signature.to_dict(),
+                "input_example": json.loads(feature_example.to_json(orient="records")),
+            },
+            "lineage/model_contract.json",
+        )
         mlflow.log_artifact(str(C.ARTIFACT_DIR / "feature_importance.csv"))
         mlflow.log_artifact(str(C.METRICS_PATH))
+        holdout = test_df[["week", "product_category", "geo", "spend_inr"]].copy()
+        holdout["actual_roas"] = test_df[C.TARGET].to_numpy()
+        holdout["predicted_roas"] = pred_te
+        holdout["absolute_error"] = np.abs(holdout["actual_roas"] - pred_te)
+        with tempfile.TemporaryDirectory(prefix="adperf-mlflow-") as tmp:
+            prediction_path = Path(tmp) / "holdout_predictions.csv"
+            holdout.to_csv(prediction_path, index=False)
+            mlflow.log_artifact(str(prediction_path), artifact_path="evaluation")
         try:
             model_info = mlflow.lightgbm.log_model(
-                model, name="model", registered_model_name=C.REGISTERED_MODEL_NAME
+                model,
+                name="model",
+                registered_model_name=C.REGISTERED_MODEL_NAME,
+                signature=signature,
             )
             registered_version = getattr(model_info, "registered_model_version", None)
         except Exception as exc:  # noqa: BLE001 - registry may be unavailable; a
@@ -280,6 +333,8 @@ def _log_mlflow(model, cfg, metrics, importance, train_df) -> dict | None:
             "registered_model_version": str(registered_version) if registered_version else None,
             "source_revision": os.getenv("GITHUB_SHA", "local"),
             "dataset": "weekly.parquet",
+            "dataset_sha256": dataset_sha256,
+            "data_lineage": data_lineage,
             "dependencies": dependencies,
             "params": params,
         }
