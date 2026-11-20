@@ -41,6 +41,43 @@ def load_json(path: str):
     return json.loads(p.read_text()) if p.exists() else None
 
 
+
+@st.cache_data(ttl=20)
+def load_mlflow_experiments():
+    from mlflow.tracking import MlflowClient
+
+    client = MlflowClient(tracking_uri=C.MLFLOW_TRACKING_URI)
+    experiments = client.search_experiments()
+    return [
+        {"experiment_id": exp.experiment_id, "name": exp.name}
+        for exp in experiments
+        if exp.lifecycle_stage == "active"
+    ]
+
+
+@st.cache_data(ttl=20)
+def load_mlflow_runs(experiment_id: str):
+    from mlflow.tracking import MlflowClient
+
+    client = MlflowClient(tracking_uri=C.MLFLOW_TRACKING_URI)
+    runs = client.search_runs(
+        [experiment_id],
+        order_by=["attributes.start_time DESC"],
+        max_results=50,
+    )
+    return [
+        {
+            "run_id": run.info.run_id,
+            "run_name": run.data.tags.get("mlflow.runName", "Unnamed run"),
+            "status": run.info.status,
+            "started_at": run.info.start_time,
+            "metrics": run.data.metrics,
+            "params": run.data.params,
+        }
+        for run in runs
+    ]
+
+
 def predict_one(bundle, plan: dict) -> float:
     frame = pd.DataFrame([plan])
     X = frame[bundle["features"]].copy()
@@ -64,7 +101,6 @@ weekly = load_weekly()
 insights = load_json("insights.json")
 drift = load_json("drift_report.json")
 backtest = load_json("backtest_summary.json")
-mlflow_lineage = bundle.get("mlflow")
 
 st.title("ASR Jewellery Works — Ad Performance & Marketing Insights")
 st.info(
@@ -239,75 +275,78 @@ with tab_monitor:
             st.caption("Mean ± std across walk-forward folds — the honest read on model quality.")
             st.json(backtest)
 
-# ---------------------------------------------------------- MLflow lineage
+# ---------------------------------------------------------------- MLflow
 with tab_mlflow:
-    st.subheader("Training run, model registry, and project dependencies")
-    if not mlflow_lineage:
-        st.info(
-            "This model bundle predates embedded MLflow lineage. Run the training pipeline "
-            "again to attach its experiment, run, registry, and dependency details."
-        )
+    st.subheader("Training runs from the connected MLflow tracker")
+    st.caption(f"Tracking URI: `{C.MLFLOW_TRACKING_URI}` · refreshes every 20 seconds")
+    try:
+        experiments = load_mlflow_experiments()
+    except Exception as exc:  # noqa: BLE001 - show tracker status in the dashboard
+        st.error(f"Cannot reach the MLflow tracking server: {exc}")
+        st.info("Start the MLflow service with `docker compose up -d mlflow` and refresh this page.")
     else:
-        st.caption(
-            "This information was captured from the MLflow run that produced the model "
-            "currently loaded by this dashboard."
-        )
-        with st.container(border=True):
-            st.markdown(f"**Experiment:** `{mlflow_lineage['experiment_name']}`")
-            st.markdown(f"**Run:** {mlflow_lineage['run_name']}")
-            st.code(mlflow_lineage["run_id"], language=None)
-            version = mlflow_lineage.get("registered_model_version")
-            registered = mlflow_lineage.get("registered_model_name", "not registered")
-            st.markdown(
-                f"**Registered model:** `{registered}`"
-                + (f" · **Version:** `{version}`" if version else " · registry version unavailable")
-            )
-            st.markdown(
-                f"**Dataset:** `{mlflow_lineage.get('dataset', 'unknown')}` · "
-                f"**Training rows:** {bundle['train_rows']:,} · "
-                f"**Code revision:** `{mlflow_lineage.get('source_revision', 'unknown')[:12]}`"
-            )
-            lineage = mlflow_lineage.get("data_lineage", {})
-            if lineage:
-                st.caption(
-                    f"Train window {lineage['train_start'][:10]} to {lineage['train_end'][:10]} · "
-                    f"validation {lineage['validation_rows']:,} rows · "
-                    f"test {lineage['test_rows']:,} rows · "
-                    f"SHA-256 `{lineage['sha256']}`"
+        if not experiments:
+            st.info("No active MLflow experiments are available yet. Run a training job to create one.")
+        else:
+            names = {exp["name"]: exp["experiment_id"] for exp in experiments}
+            exp_name = st.selectbox("Experiment", list(names))
+            experiment_id = names[exp_name]
+            try:
+                runs = load_mlflow_runs(experiment_id)
+            except Exception as exc:  # noqa: BLE001 - keep the rest of the dashboard usable
+                st.error(f"Could not load MLflow runs: {exc}")
+                runs = []
+
+            if not runs:
+                st.info("This experiment has no training runs yet.")
+            else:
+                run_rows = []
+                for run in runs:
+                    started = run["started_at"]
+                    run_rows.append({
+                        "Run": run["run_name"],
+                        "Status": run["status"],
+                        "Started (UTC)": (
+                            pd.to_datetime(started, unit="ms", utc=True).strftime("%Y-%m-%d %H:%M")
+                            if started else "—"
+                        ),
+                        "Test MAE": run["metrics"].get("test_mae"),
+                        "Test R²": run["metrics"].get("test_r2"),
+                        "Top 20% lift": run["metrics"].get("test_top20_lift"),
+                        "Run ID": run["run_id"],
+                    })
+                st.dataframe(pd.DataFrame(run_rows), width="stretch", hide_index=True)
+
+                run_by_id = {run["run_id"]: run for run in runs}
+                selected_run_id = st.selectbox(
+                    "Run details",
+                    list(run_by_id),
+                    format_func=lambda run_id: run_by_id[run_id]["run_name"],
                 )
+                selected_run = run_by_id[selected_run_id]
+                left, right = st.columns(2)
+                left.markdown("**Parameters**")
+                left.json(selected_run["params"])
+                right.markdown("**Metrics**")
+                right.json(selected_run["metrics"])
 
-        st.markdown("**Key evaluation metrics**")
-        score = bundle["metrics"]
-        a, b, c, d = st.columns(4)
-        a.metric("Test MAE", f"{score.get('test_mae', 0):.3f}")
-        b.metric("Test RMSE", f"{score.get('test_rmse', 0):.3f}")
-        c.metric("Spearman rank", f"{score.get('test_spearman', 0):.3f}")
-        d.metric("Top 20% lift", f"{score.get('test_top20_lift', 0):.2f}x")
+                from mlflow.tracking import MlflowClient
 
-        left, right = st.columns(2)
-        with left:
-            st.markdown("**Training parameters**")
-            st.dataframe(
-                pd.DataFrame(
-                    mlflow_lineage.get("params", {}).items(), columns=["Parameter", "Value"]
-                ),
-                hide_index=True,
-                width="stretch",
-            )
-        with right:
-            st.markdown("**Runtime dependencies**")
-            st.dataframe(
-                pd.DataFrame(
-                    mlflow_lineage.get("dependencies", {}).items(),
-                    columns=["Package", "Version"],
-                ),
-                hide_index=True,
-                width="stretch",
-            )
+                client = MlflowClient(tracking_uri=C.MLFLOW_TRACKING_URI)
+                try:
+                    artifacts = client.list_artifacts(selected_run_id)
+                except Exception as exc:  # noqa: BLE001 - artifact listing is supplementary
+                    st.warning(f"Run details loaded, but its artifact list is unavailable: {exc}")
+                else:
+                    st.markdown("**Logged artifacts**")
+                    st.dataframe(
+                        pd.DataFrame([
+                            {"Path": item.path, "Directory": item.is_dir, "Size (bytes)": item.file_size}
+                            for item in artifacts
+                        ]),
+                        width="stretch",
+                        hide_index=True,
+                    )
 
-        st.caption(
-            "The dashboard displays lineage embedded in the deployed model bundle. "
-            "The full run history and artifacts are available in the tracking backend "
-            "used during training; local or CI tracking stores are not shared with Render."
-        )
-
+st.divider()
+st.caption("MLOps · predictions use the versioned model artifact · monitoring reports feature drift, target drift, and performance decay separately")

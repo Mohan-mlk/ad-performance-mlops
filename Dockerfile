@@ -17,7 +17,15 @@ COPY src/ ./src/
 COPY artifacts/ ./artifacts/
 COPY data/reference/ ./data/reference/
 COPY data/processed/ ./data/processed/
-COPY scripts/start-api.sh scripts/start-dashboard.sh ./scripts/
+COPY scripts/start-api.sh scripts/start-dashboard.sh scripts/start-mlflow.sh scripts/seed-mlflow.py ./scripts/
+
+# Weekly training data is generated in CI before image packaging, but it is
+# ignored by Git. Generate the same synthetic features when Render builds
+# directly from the repository so the dashboard works on a clean checkout.
+RUN if [ ! -f data/processed/weekly.parquet ]; then \
+      python -m adperf.data.generate --rows 24000 && \
+      python -m adperf.features.build; \
+    fi
 
 RUN useradd -m -u 10001 appuser \
     && mkdir -p /app/mlflow-data /app/mlflow-artifacts \
@@ -26,6 +34,6 @@ USER appuser
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
-    CMD python -c "import os,urllib.request;urllib.request.urlopen('http://localhost:%s/ready' % os.getenv('PORT','8000'))"
+    CMD python -c "import os,urllib.request;urllib.request.urlopen('http://localhost:%s%s' % (os.getenv('PORT','8000'),os.getenv('HEALTH_PATH','/ready')))"
 
 CMD ["uvicorn", "adperf.serving.api:app", "--host", "0.0.0.0", "--port", "8000"]

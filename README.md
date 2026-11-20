@@ -36,11 +36,10 @@ experiment. The model is registered as `asr_roas_predictor` when the registry
 is available. The saved model bundle also includes the experiment/run IDs,
 registry version, source revision, data filename, training parameters, and
 Python/MLflow/LightGBM/numerical-library versions. The dashboard's **MLflow
-lineage** tab reads that metadata from the deployed model, so it can show which
-training flow produced its predictions without connecting to the trainer's
-local database. Each MLflow run also stores the dataset checksum and time split,
-a model input signature and example, and a holdout prediction CSV for inspecting
-actual versus predicted ROAS.
+runs** tab reads live experiment and run records from the configured tracking
+URI, including metrics, parameters, and artifact names. Each MLflow run also
+stores the dataset checksum and time split, a model input signature and example,
+and a holdout prediction CSV for inspecting actual versus predicted ROAS.
 
 ### Run the full MLflow flow with Docker
 
@@ -79,32 +78,30 @@ version automatically.
 
 ## Stable public deployment
 
-This repository includes a Render Blueprint that serves the dashboard and API
-from the same image that passes the GitHub Actions model-quality gate and API
-container smoke check.
+This repository includes a Render Blueprint that builds the dashboard, API,
+and MLflow tracking UI from this repository's Dockerfile after GitHub Actions
+checks pass. The dashboard is configured to query the hosted MLflow service,
+so its **MLflow runs** tab shows records from that deployed tracker rather than
+a separate local database.
 
 1. Push to `main`. After lint, tests, training, rolling-origin backtest, model
-   quality gates, and the container smoke check succeed, GitHub Actions pushes
-   the image to GitHub Container Registry (GHCR), tagged with the commit SHA
-   and `latest`.
-2. In GitHub, open the `ad-performance-mlops` package under your profile and
-   change its visibility to **Public**. The repository is already public and
-   the image contains only this project and its synthetic demo data/model.
-3. In Render, create a **Blueprint Instance** from this repository after the
-   image package is public. Render reads `render.yaml` and creates the API and
-   dashboard services from the GHCR image. Their URLs are listed on each
-   service page; the API docs are at the API URL plus `/docs`.
-4. Copy each service's **Deploy Hook** from its Render settings. Add GitHub
-   Actions repository secrets named `RENDER_API_DEPLOY_HOOK` and
-   `RENDER_DASHBOARD_DEPLOY_HOOK`. The CI deployment job fails clearly if
-   either secret is missing; successful `main` builds publish the new image
-   and trigger both services to redeploy it.
+   quality gates and container smoke check succeed. GitHub Actions also
+   publishes a CI-verified image to GHCR for reuse outside Render.
+2. In Render, create or sync a **Blueprint Instance** from this repository.
+   Render reads `render.yaml` and builds the API, dashboard, and MLflow
+   services from the Dockerfile. The dashboard and
+   tracker links are `https://asr-adperf-dashboard.onrender.com/` and
+   `https://asr-adperf-mlflow.onrender.com/`; API docs are at the API URL plus
+   `/docs`.
+3. Render is configured to auto-deploy after the GitHub checks pass.
 
 The Blueprint uses Render's free plan for a student demo. Free services can
-sleep while idle; local MLflow databases and prediction logs are not durable
-on that plan. Use a persistent managed datastore and paid always-on compute if
-you need durable production tracking or logs. Do not upload real customer or
-advertising account data to the public repository or image.
+sleep while idle, and the hosted MLflow SQLite database and artifacts use
+ephemeral storage, so a restart or redeploy can clear run history. Durable
+tracking requires persistent storage on a paid service or a managed database
+and artifact store. The MLflow UI is public and has no sign-in; keep only
+synthetic, non-sensitive experiment data there. Do not upload real customer or
+advertising account data to the public repository, image, or tracker.
 
 ---
 

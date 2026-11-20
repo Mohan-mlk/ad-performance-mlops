@@ -1,25 +1,42 @@
-# Render runs the exact image that passed the CI smoke test.
-# Make the GHCR package public before creating these services, or configure a
-# Render registry credential for a private package.
+# Render builds this repository's Dockerfile after GitHub Actions checks pass.
 services:
   - type: web
-    name: asr-adperf-api
-    runtime: image
+    name: asr-adperf-mlflow
+    runtime: docker
     plan: free
     region: singapore
-    image:
-      url: ghcr.io/mohan-mlk/ad-performance-mlops:latest
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: sh scripts/start-mlflow.sh
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: HEALTH_PATH
+        value: /health
+
+  - type: web
+    name: asr-adperf-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     dockerCommand: sh scripts/start-api.sh
     healthCheckPath: /ready
-    autoDeploy: false
+    autoDeployTrigger: checksPass
 
   - type: web
     name: asr-adperf-dashboard
-    runtime: image
+    runtime: docker
     plan: free
     region: singapore
-    image:
-      url: ghcr.io/mohan-mlk/ad-performance-mlops:latest
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     dockerCommand: sh scripts/start-dashboard.sh
     healthCheckPath: /_stcore/health
-    autoDeploy: false
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: MLFLOW_TRACKING_URI
+        value: https://asr-adperf-mlflow.onrender.com
+      - key: HEALTH_PATH
+        value: /_stcore/health
