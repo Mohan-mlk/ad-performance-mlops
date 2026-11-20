@@ -13,6 +13,11 @@ services:
     envVars:
       - key: HEALTH_PATH
         value: /health
+      # This deployment only tracks experiments; it does not run server-side
+      # scorer jobs. Disabling the job executor avoids allocating a second
+      # worker/queue on Render's 512 MiB free instance.
+      - key: MLFLOW_SERVER_ENABLE_JOB_EXECUTION
+        value: "false"
 
   - type: web
     name: asr-adperf-api
