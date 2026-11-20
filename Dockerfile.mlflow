@@ -7,7 +7,7 @@ WORKDIR /app
 
 # MLflow 2.10 provides experiment tracking, the tracking UI, and proxied
 # artifacts without the newer server-side job execution stack.
-RUN pip install --no-cache-dir "mlflow==2.10.2"
+RUN pip install --no-cache-dir "mlflow==2.10.2" "sqlalchemy<2.1"
 
 COPY scripts/start-mlflow.sh ./scripts/start-mlflow.sh
 RUN useradd -m -u 10001 appuser \
