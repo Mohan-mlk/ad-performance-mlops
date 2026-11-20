@@ -10,6 +10,8 @@ WORKDIR /app
 RUN pip install --no-cache-dir "mlflow==2.10.2" "sqlalchemy<2.1"
 
 COPY scripts/start-mlflow.sh ./scripts/start-mlflow.sh
+COPY scripts/seed-mlflow-on-start.py ./scripts/seed-mlflow-on-start.py
+COPY artifacts/metrics.json ./metrics.json
 RUN useradd -m -u 10001 appuser \
     && mkdir -p /tmp/mlflow/artifacts \
     && chown -R appuser:appuser /app /tmp/mlflow
