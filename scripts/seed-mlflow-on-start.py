@@ -4,6 +4,9 @@ from __future__ import annotations
 import json
 import math
 import os
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import mlflow
@@ -13,22 +16,27 @@ from mlflow.tracking import MlflowClient
 def main() -> None:
     data_dir = Path(os.getenv("MLFLOW_DATA_DIR", "/tmp/mlflow"))
     data_dir.mkdir(parents=True, exist_ok=True)
-    backend_uri = os.getenv(
-        "MLFLOW_BACKEND_STORE_URI", f"sqlite:///{data_dir / 'mlflow.db'}"
-    )
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
     experiment_name = os.getenv("MLFLOW_EXPERIMENT", "asr-ad-performance")
     metrics_path = Path(os.getenv("MLFLOW_METRICS_PATH", "/app/metrics.json"))
 
-    mlflow.set_tracking_uri(backend_uri)
-    client = MlflowClient(tracking_uri=backend_uri)
+    health_url = f"{tracking_uri.rstrip('/')}/health"
+    deadline = time.monotonic() + 90
+    while True:
+        try:
+            with urllib.request.urlopen(health_url, timeout=3) as response:
+                if response.status == 200:
+                    break
+        except (OSError, urllib.error.URLError):
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"MLflow server did not become healthy: {health_url}")
+            time.sleep(1)
+
+    mlflow.set_tracking_uri(tracking_uri)
+    client = MlflowClient(tracking_uri=tracking_uri)
     experiment = client.get_experiment_by_name(experiment_name)
     if experiment is None:
-        # Artifacts are proxied by the serving MLflow process. This seeded run
-        # logs evaluation metrics only; normal training runs can log artifacts.
-        experiment_id = client.create_experiment(
-            experiment_name,
-            artifact_location="mlflow-artifacts:/1",
-        )
+        experiment_id = client.create_experiment(experiment_name)
     else:
         experiment_id = experiment.experiment_id
 
@@ -60,6 +68,11 @@ def main() -> None:
             }
         )
         mlflow.log_metrics(metrics)
+
+    print(
+        f"Seeded MLflow experiment {experiment_name!r} with "
+        f"{len(metrics)} release evaluation metrics."
+    )
 
 
 if __name__ == "__main__":
