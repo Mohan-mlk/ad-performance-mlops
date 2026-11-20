@@ -1,0 +1,19 @@
+# Keep the public tracking service small enough for Render's free instance.
+# The API and dashboard continue to use the full project image.
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+
+# MLflow 2.10 provides experiment tracking, the tracking UI, and proxied
+# artifacts without the newer server-side job execution stack.
+RUN pip install --no-cache-dir "mlflow==2.10.2"
+
+COPY scripts/start-mlflow.sh ./scripts/start-mlflow.sh
+RUN useradd -m -u 10001 appuser \
+    && mkdir -p /tmp/mlflow/artifacts \
+    && chown -R appuser:appuser /app /tmp/mlflow
+
+USER appuser
+EXPOSE 5000
+CMD ["sh", "scripts/start-mlflow.sh"]

@@ -9,7 +9,6 @@ exec mlflow server \
   --backend-store-uri "${MLFLOW_BACKEND_STORE_URI:-sqlite:///$MLFLOW_DATA_DIR/mlflow.db}" \
   --artifacts-destination "$MLFLOW_ARTIFACT_DIR" \
   --serve-artifacts \
-  --allowed-hosts "*.onrender.com,localhost:*,127.0.0.1:*,asr-adperf-mlflow:5000" \
   --host 0.0.0.0 \
   --workers "${MLFLOW_WORKERS:-1}" \
   --port "${PORT:-5000}"
