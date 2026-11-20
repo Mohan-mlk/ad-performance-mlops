@@ -5,7 +5,7 @@ services:
     runtime: docker
     plan: free
     region: singapore
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./Dockerfile.mlflow
     dockerContext: .
     dockerCommand: sh scripts/start-mlflow.sh
     healthCheckPath: /health
@@ -19,7 +19,7 @@ services:
     runtime: docker
     plan: free
     region: singapore
-    dockerfilePath: ./Dockerfile.mlflow
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: sh scripts/start-api.sh
     healthCheckPath: /ready
