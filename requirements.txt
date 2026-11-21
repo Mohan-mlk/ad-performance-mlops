@@ -9,6 +9,7 @@ pyarrow>=15.0
 
 # Tracking
 mlflow>=3.0
+dagshub>=0.5
 
 # Serving
 fastapi>=0.110

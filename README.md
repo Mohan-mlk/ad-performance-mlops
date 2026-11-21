@@ -76,6 +76,39 @@ currently loads that bundle directly at startup. MLflow records and registers
 training outputs for review, but deployment does not yet promote a registry
 version automatically.
 
+### Publish the release metrics to DagsHub MLflow
+
+The project is mirrored at
+[`Mohan-mlk/ad-performance-mlops`](https://dagshub.com/Mohan-mlk/ad-performance-mlops),
+which provides a hosted MLflow tracker. To publish the committed synthetic
+release metrics to its `asr-ad-performance` experiment, run this from the
+project root:
+
+```powershell
+py -3 scripts/publish-release-metrics-to-dagshub.py
+```
+
+The script opens DagsHub's short-lived OAuth authorization flow, logs the
+metrics from `artifacts/metrics.json`, then prints a direct run link. Its
+temporary token cache is deleted after the upload; never commit a token or real
+customer data. The tracker is at
+[`ad-performance-mlops.mlflow`](https://dagshub.com/Mohan-mlk/ad-performance-mlops.mlflow).
+
+To send a **new model training run** to that hosted experiment, first build the
+project's weekly features (`make data features` if they are not already
+available), then run:
+
+```powershell
+py -3 scripts/train-dagshub.py
+```
+
+This uses the same training function as `make train`; it calls `dagshub.init`
+first so the regular MLflow parameters, evaluation metrics, lineage, artifacts,
+and model are recorded in the DagsHub experiment. DagsHub may open an OAuth
+authorization page on the first run. The DagsHub page above then shows the new
+run. The dashboard on Render continues to show runs from its separately
+configured Render MLflow service.
+
 ## Stable public deployment
 
 This repository includes a Render Blueprint that builds the dashboard, API,
