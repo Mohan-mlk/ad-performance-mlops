@@ -113,6 +113,25 @@ authorization page on the first run. The DagsHub page above then shows the new
 run. The dashboard on Render continues to show runs from its separately
 configured Render MLflow service.
 
+### Train and log a run to the Render MLflow service
+
+The hosted tracker is already deployed at
+[`asr-adperf-mlflow.onrender.com`](https://asr-adperf-mlflow.onrender.com/), and
+the dashboard points to it. To add a real model run with the training
+parameters and train/validation/test datasets, run this in PowerShell from the
+project root:
+
+```powershell
+$env:PYTHONPATH = "src"
+py -3 -m adperf.data.generate --rows 24000
+py -3 -m adperf.features.build
+py -3 scripts/train-render.py
+```
+
+The first two commands build the synthetic weekly training dataset. The last
+trains the model locally and logs its run to the hosted Render tracker. Keep
+the inputs synthetic because this MLflow page is public.
+
 ## Stable public deployment
 
 This repository includes a Render Blueprint that builds the dashboard, API,
