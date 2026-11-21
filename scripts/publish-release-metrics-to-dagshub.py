@@ -1,14 +1,13 @@
 """Publish the bundled release metrics to this project's DagsHub MLflow tracker.
 
-Authentication uses DagsHub's short-lived OAuth flow. The temporary token
-cache is deleted as soon as the upload completes and is never committed.
+Authentication uses DagsHub's expiring OAuth token cache in the user's profile,
+outside this repository. The token is never written to project files or logs.
 """
 from __future__ import annotations
 
 import base64
 import json
 import math
-import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -57,60 +56,56 @@ def main() -> None:
         if isinstance(value, (int, float)) and math.isfinite(value)
     }
 
-    # Use DagsHub's short-lived OAuth flow. The temporary cache is removed as
-    # soon as the upload completes, so no token remains on disk.
-    with tempfile.TemporaryDirectory(prefix="dagshub-mlflow-auth-") as cache_dir:
-        cache_path = Path(cache_dir) / "tokens.json"
-        token = dagshub.auth.get_token(cache_location=str(cache_path))
-        result = mlflow_request(
-            token,
-            "experiments/get-by-name",
-            {"experiment_name": EXPERIMENT_NAME},
-            method="GET",
-        )
-        experiment_id = result["experiment"]["experiment_id"]
-        started_ms = int(time.time() * 1000)
-        created = mlflow_request(
-            token,
-            "runs/create",
-            {
-                "experiment_id": experiment_id,
-                "start_time": started_ms,
-                "run_name": "released-model-evaluation",
-                "tags": [
-                    {"key": "source", "value": "release-bundle-metrics"},
-                    {"key": "model", "value": "ad-performance-predictor"},
-                    {"key": "dataset", "value": "synthetic-project-benchmark"},
-                    {"key": "run_type", "value": "release_evaluation"},
-                ],
-            },
-        )
-        run_id = created["run"]["info"]["run_id"]
-        mlflow_request(
-            token,
-            "runs/log-batch",
-            {
-                "run_id": run_id,
-                "metrics": [
-                    {
-                        "key": key,
-                        "value": value,
-                        "timestamp": started_ms,
-                        "step": 0,
-                    }
-                    for key, value in metrics.items()
-                ],
-                "params": [
-                    {"key": "metric_source", "value": "artifacts/metrics.json"},
-                    {"key": "data_type", "value": "synthetic benchmark"},
-                ],
-            },
-        )
-        mlflow_request(
-            token,
-            "runs/update",
-            {"run_id": run_id, "status": "FINISHED", "end_time": int(time.time() * 1000)},
-        )
+    token = dagshub.auth.get_token()
+    result = mlflow_request(
+        token,
+        "experiments/get-by-name",
+        {"experiment_name": EXPERIMENT_NAME},
+        method="GET",
+    )
+    experiment_id = result["experiment"]["experiment_id"]
+    started_ms = int(time.time() * 1000)
+    created = mlflow_request(
+        token,
+        "runs/create",
+        {
+            "experiment_id": experiment_id,
+            "start_time": started_ms,
+            "run_name": "released-model-evaluation",
+            "tags": [
+                {"key": "source", "value": "release-bundle-metrics"},
+                {"key": "model", "value": "ad-performance-predictor"},
+                {"key": "dataset", "value": "synthetic-project-benchmark"},
+                {"key": "run_type", "value": "release_evaluation"},
+            ],
+        },
+    )
+    run_id = created["run"]["info"]["run_id"]
+    mlflow_request(
+        token,
+        "runs/log-batch",
+        {
+            "run_id": run_id,
+            "metrics": [
+                {
+                    "key": key,
+                    "value": value,
+                    "timestamp": started_ms,
+                    "step": 0,
+                }
+                for key, value in metrics.items()
+            ],
+            "params": [
+                {"key": "metric_source", "value": "artifacts/metrics.json"},
+                {"key": "data_type", "value": "synthetic benchmark"},
+            ],
+        },
+    )
+    mlflow_request(
+        token,
+        "runs/update",
+        {"run_id": run_id, "status": "FINISHED", "end_time": int(time.time() * 1000)},
+    )
     print(f"Logged {len(metrics)} release metrics to DagsHub MLflow.")
     print(f"Run: {TRACKING_URI}/#/experiments/{experiment_id}/runs/{run_id}")
 

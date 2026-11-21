@@ -88,10 +88,10 @@ project root:
 py -3 scripts/publish-release-metrics-to-dagshub.py
 ```
 
-The script opens DagsHub's short-lived OAuth authorization flow, logs the
-metrics from `artifacts/metrics.json`, then prints a direct run link. Its
-temporary token cache is deleted after the upload; never commit a token or real
-customer data. The tracker is at
+The script opens DagsHub's expiring OAuth authorization flow, logs the
+metrics from `artifacts/metrics.json`, then prints a direct run link. The DagsHub
+client keeps its token in your user profile outside the repository so later
+training runs can reuse it; never commit a token or real customer data. The tracker is at
 [`ad-performance-mlops.mlflow`](https://dagshub.com/Mohan-mlk/ad-performance-mlops.mlflow).
 
 To send a **new model training run** to that hosted experiment, first build the
