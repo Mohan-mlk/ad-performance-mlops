@@ -281,6 +281,22 @@ def _log_mlflow(
         )
         mlflow.log_params(params)
         mlflow.log_params({f"dependency_{name}": version for name, version in dependencies.items()})
+        dataset_source = str(Path(data_path).resolve())
+        for context, split_name, frame in (
+            ("training", "train", train_df),
+            ("validation", "validation", valid_df),
+            ("testing", "test", test_df),
+        ):
+            dataset_frame = frame[[*C.FEATURES, C.TARGET]].copy()
+            for column in C.CATEGORICAL_FEATURES:
+                dataset_frame[column] = dataset_frame[column].astype("string").fillna("")
+            dataset = mlflow.data.from_pandas(
+                dataset_frame,
+                source=dataset_source,
+                name=f"ad-performance-weekly-{split_name}",
+                targets=C.TARGET,
+            )
+            mlflow.log_input(dataset, context=context)
         mlflow.log_metrics(metrics)
         mlflow.log_dict(data_lineage, "lineage/data.json")
         mlflow.log_dict(

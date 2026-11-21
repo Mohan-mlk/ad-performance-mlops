@@ -40,6 +40,10 @@ runs** tab reads live experiment and run records from the configured tracking
 URI, including metrics, parameters, and artifact names. Each MLflow run also
 stores the dataset checksum and time split, a model input signature and example,
 and a holdout prediction CSV for inspecting actual versus predicted ROAS.
+Training runs also log the actual weekly train, validation, and test splits as
+MLflow datasets, so their names and schemas appear in each run's **Datasets**
+section. The one-time `seed-mlflow-on-start.py` deployment run contains only
+release metrics and two seed parameters; it is not a model-training run.
 
 ### Run the full MLflow flow with Docker
 
