@@ -11,6 +11,7 @@ import math
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -22,16 +23,22 @@ EXPERIMENT_NAME = "asr-ad-performance"
 METRICS_PATH = Path(__file__).resolve().parents[1] / "artifacts" / "metrics.json"
 
 
-def mlflow_request(token: str, endpoint: str, payload: dict) -> dict:
+def mlflow_request(token: str, endpoint: str, payload: dict, *, method: str = "POST") -> dict:
     credentials = base64.b64encode(f"Mohan-mlk:{token}".encode()).decode("ascii")
+    url = f"{TRACKING_URI}/api/2.0/mlflow/{endpoint}"
+    body = None
+    if method == "GET":
+        url = f"{url}?{urllib.parse.urlencode(payload)}"
+    else:
+        body = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
-        f"{TRACKING_URI}/api/2.0/mlflow/{endpoint}",
-        data=json.dumps(payload).encode("utf-8"),
+        url,
+        data=body,
         headers={
             "Authorization": f"Basic {credentials}",
             "Content-Type": "application/json",
         },
-        method="POST",
+        method=method,
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
@@ -59,6 +66,7 @@ def main() -> None:
             token,
             "experiments/get-by-name",
             {"experiment_name": EXPERIMENT_NAME},
+            method="GET",
         )
         experiment_id = result["experiment"]["experiment_id"]
         started_ms = int(time.time() * 1000)
