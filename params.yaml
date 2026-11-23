@@ -1,0 +1,20 @@
+data:
+  rows: 24000
+  seed: 42
+
+features:
+  history_window_weeks: 12
+
+train:
+  n_estimators: 600
+  learning_rate: 0.05
+  num_leaves: 31
+  max_depth: -1
+  min_child_samples: 40
+  subsample: 0.9
+  colsample_bytree: 0.85
+  reg_lambda: 1.0
+  random_state: 42
+  valid_days: 60
+  test_days: 90
+  early_stopping_rounds: 60

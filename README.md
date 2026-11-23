@@ -27,6 +27,45 @@ make mlflow-ui     # experiment tracking on :5000
 docker compose up  # api + dashboard + mlflow together
 ```
 
+## Data and pipeline versioning with DVC
+
+DVC tracks the generated raw event table, weekly feature table, trained model,
+feature importance, reference window, and metrics. `params.yaml` holds the data
+generation seed/row count, history window, and model hyperparameters. The
+`dvc.yaml` pipeline links data generation → feature engineering → training, so
+changing an input or parameter invalidates the affected stages.
+
+Install the DVC S3 backend and run the pipeline from the project root:
+
+```powershell
+py -3 -m pip install -r requirements-dvc.txt
+$env:DVC_SITE_CACHE_DIR = Join-Path $PWD ".dvc-site-cache"
+py -3 -m dvc repro
+py -3 -m dvc status
+py -3 -m dvc metrics show
+py -3 -m dvc params diff
+```
+
+The default DVC remote is configured for this project's DagsHub Storage. To
+share the cached data and model versions, use the DagsHub OAuth helper (the
+first use may open a browser approval page):
+
+```powershell
+py -3 scripts/dvc_sync_dagshub.py push
+```
+
+After checking out another Git revision, restore its DVC outputs with:
+
+```powershell
+py -3 scripts/dvc_sync_dagshub.py pull
+```
+
+The helper passes expiring DagsHub credentials only to the DVC process; it does
+not write them to the repository. DVC keeps local credentials, cache metadata,
+and workspace state under ignored paths. Commit `dvc.yaml`, `dvc.lock`,
+`params.yaml`, and `.dvc/config` alongside Git changes; the large data and model
+files go to DagsHub Storage through DVC.
+
 ## Experiment tracking with MLflow
 
 Every successful training run (`make train` or the training stage of

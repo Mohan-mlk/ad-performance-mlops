@@ -1,0 +1,53 @@
+stages:
+  generate_data:
+    cmd: python scripts/dvc_generate.py --rows ${data.rows} --seed ${data.seed}
+    deps:
+      - scripts/dvc_generate.py
+      - src/adperf/data/generate.py
+      - src/adperf/config.py
+    params:
+      - data.rows
+      - data.seed
+    outs:
+      - data/raw/ad_events.parquet
+
+  build_features:
+    cmd: python scripts/dvc_build_features.py
+    deps:
+      - scripts/dvc_build_features.py
+      - src/adperf/features/build.py
+      - src/adperf/config.py
+      - data/raw/ad_events.parquet
+    params:
+      - features.history_window_weeks
+    outs:
+      - data/processed/weekly.parquet
+
+  train_model:
+    cmd: python scripts/dvc_train.py
+    deps:
+      - scripts/dvc_train.py
+      - src/adperf/models/train.py
+      - src/adperf/features/build.py
+      - src/adperf/config.py
+      - data/processed/weekly.parquet
+    params:
+      - train.n_estimators
+      - train.learning_rate
+      - train.num_leaves
+      - train.max_depth
+      - train.min_child_samples
+      - train.subsample
+      - train.colsample_bytree
+      - train.reg_lambda
+      - train.random_state
+      - train.valid_days
+      - train.test_days
+      - train.early_stopping_rounds
+    outs:
+      - artifacts/model.joblib
+      - artifacts/feature_importance.csv
+      - data/reference/reference_window.parquet
+    metrics:
+      - artifacts/metrics.json:
+          cache: false

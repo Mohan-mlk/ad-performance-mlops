@@ -11,3 +11,5 @@ artifacts/*
 mlflow.db
 mlruns/
 .venv/
+.dvc-site-cache/
+!artifacts/metrics.json

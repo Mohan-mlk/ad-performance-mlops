@@ -1,0 +1,53 @@
+schema: '2.0'
+stages:
+  generate_data:
+    cmd: python scripts/dvc_generate.py --rows 24000 --seed 42
+    deps:
+    - path: scripts/dvc_generate.py
+      hash: md5
+      md5: d479afd5e0ff70baf7fdcaaf0040af2c
+      size: 317
+    - path: src/adperf/config.py
+      hash: md5
+      md5: f51d23a55c66bb9187708cb0bbbd0bef
+      size: 6229
+    - path: src/adperf/data/generate.py
+      hash: md5
+      md5: b0a4d059d37df812b5826456c69701f9
+      size: 15015
+    params:
+      params.yaml:
+        data.rows: 24000
+        data.seed: 42
+    outs:
+    - path: data/raw/ad_events.parquet
+      hash: md5
+      md5: 6ed10813e7d9df72915fc0070b256e7c
+      size: 2054712
+  build_features:
+    cmd: python scripts/dvc_build_features.py
+    deps:
+    - path: data/raw/ad_events.parquet
+      hash: md5
+      md5: 6ed10813e7d9df72915fc0070b256e7c
+      size: 2054712
+    - path: scripts/dvc_build_features.py
+      hash: md5
+      md5: 354c47e7f42b82ba7694d68b35490e54
+      size: 486
+    - path: src/adperf/config.py
+      hash: md5
+      md5: f51d23a55c66bb9187708cb0bbbd0bef
+      size: 6229
+    - path: src/adperf/features/build.py
+      hash: md5
+      md5: 9bc0c2b530ed28ec6340a580278456d9
+      size: 7484
+    params:
+      params.yaml:
+        features.history_window_weeks: 12
+    outs:
+    - path: data/processed/weekly.parquet
+      hash: md5
+      md5: 0ebc7d721054c73becde1ce6148e72ad
+      size: 462882
