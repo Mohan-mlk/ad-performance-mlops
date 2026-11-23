@@ -29,7 +29,12 @@ def _log_dataset(
     """Record a dataset's schema/profile in MLflow without exposing real data."""
     from adperf import config as C
 
-    logged_frame = frame.copy()
+    # MLflow 2.10's PandasDataset profile can be very slow on the full raw
+    # event table. Use a deterministic, evenly spaced sample for the UI schema
+    # and profile; the complete parquet is uploaded below as a run artifact.
+    full_row_count = len(frame)
+    sample_stride = max(1, (full_row_count + 999) // 1000)
+    logged_frame = frame.iloc[::sample_stride].copy()
     for column in C.CATEGORICAL_FEATURES:
         if column in logged_frame:
             logged_frame[column] = logged_frame[column].astype("string").fillna("")
@@ -45,7 +50,12 @@ def _log_dataset(
     mlflow.log_input(
         dataset,
         context=context,
-        tags={"source_sha256": source_sha256, "dataset_is_synthetic": "true"},
+        tags={
+            "source_sha256": source_sha256,
+            "dataset_is_synthetic": "true",
+            "source_row_count": str(full_row_count),
+            "metadata_sample_rows": str(len(logged_frame)),
+        },
     )
 
 
@@ -83,7 +93,7 @@ def main() -> None:
     # artifacts. Seed the richer run once, even when that older run exists.
     existing_project_run = client.search_runs(
         [experiment_id],
-        filter_string="tags.project_integration_version = '3'",
+        filter_string="tags.project_integration_version = '4'",
         max_results=1,
     )
     if existing_project_run:
@@ -127,12 +137,12 @@ def main() -> None:
 
     with mlflow.start_run(
         experiment_id=experiment_id,
-        run_name="project-release-with-datasets-v3",
+        run_name="project-release-with-datasets-v4",
         tags={
             "source": "project-release-bundle",
             "model": "ad-performance-predictor",
             "dataset": "synthetic-ad-events-and-weekly-features",
-            "project_integration_version": "3",
+            "project_integration_version": "4",
             "description": "Release evaluation with the project's actual synthetic data, time splits, model, and monitoring artifacts.",
         },
     ):
