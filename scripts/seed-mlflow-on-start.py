@@ -37,6 +37,9 @@ def _log_dataset(
         logged_frame,
         source=source,
         name=name,
+        # Supplying the parquet's content digest avoids MLflow's default
+        # dataframe-wide type scan, which can take minutes on this service.
+        digest=source_sha256[:32],
         targets=C.TARGET if C.TARGET in logged_frame else None,
     )
     mlflow.log_input(
@@ -80,7 +83,7 @@ def main() -> None:
     # artifacts. Seed the richer run once, even when that older run exists.
     existing_project_run = client.search_runs(
         [experiment_id],
-        filter_string="tags.project_integration_version = '2'",
+        filter_string="tags.project_integration_version = '3'",
         max_results=1,
     )
     if existing_project_run:
@@ -124,12 +127,12 @@ def main() -> None:
 
     with mlflow.start_run(
         experiment_id=experiment_id,
-        run_name="project-release-with-datasets",
+        run_name="project-release-with-datasets-v3",
         tags={
             "source": "project-release-bundle",
             "model": "ad-performance-predictor",
             "dataset": "synthetic-ad-events-and-weekly-features",
-            "project_integration_version": "2",
+            "project_integration_version": "3",
             "description": "Release evaluation with the project's actual synthetic data, time splits, model, and monitoring artifacts.",
         },
     ):
@@ -139,7 +142,7 @@ def main() -> None:
         _log_dataset(
             raw,
             name="ad-performance-raw-ad-events",
-            source="data/raw/ad_events.parquet",
+            source=raw_path.as_uri(),
             context="source",
             source_sha256=raw_sha256,
         )
@@ -151,7 +154,7 @@ def main() -> None:
             _log_dataset(
                 frame[[*C.FEATURES, C.TARGET]],
                 name=f"ad-performance-weekly-{split_name}",
-                source="data/processed/weekly.parquet",
+                source=weekly_path.as_uri(),
                 context=context,
                 source_sha256=weekly_sha256,
             )
