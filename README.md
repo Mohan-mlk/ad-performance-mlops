@@ -81,8 +81,13 @@ stores the dataset checksum and time split, a model input signature and example,
 and a holdout prediction CSV for inspecting actual versus predicted ROAS.
 Training runs also log the actual weekly train, validation, and test splits as
 MLflow datasets, so their names and schemas appear in each run's **Datasets**
-section. The one-time `seed-mlflow-on-start.py` deployment run contains only
-release metrics and two seed parameters; it is not a model-training run.
+section. The hosted Render tracker now creates a project release-lineage run
+with the generated raw ad-event dataset and chronological weekly train,
+validation, and test datasets. It logs their row/schema metadata, hashes, and
+the Parquet files themselves, alongside the release model, evaluation metrics,
+feature importance, marketing insights, drift report, backtest summary, and a
+JSON lineage manifest. This is a release-lineage/demo run; it reports the
+committed evaluation and does not retrain the model when the tracker starts.
 
 ### Run the full MLflow flow with Docker
 
@@ -154,9 +159,10 @@ configured Render MLflow service.
 
 ### Train and log a run to the Render MLflow service
 
-The hosted tracker is already deployed at
+The hosted tracker is deployed at
 [`asr-adperf-mlflow.onrender.com`](https://asr-adperf-mlflow.onrender.com/), and
-the dashboard points to it. To add a real model run with the training
+the dashboard points to it. The tracker seeds its project datasets and release
+artifacts when the updated image starts. To add a real model run with the training
 parameters and train/validation/test datasets, run this in PowerShell from the
 project root:
 
