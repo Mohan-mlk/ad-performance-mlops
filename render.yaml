@@ -37,6 +37,6 @@ services:
     autoDeployTrigger: checksPass
     envVars:
       - key: MLFLOW_TRACKING_URI
-        value: https://asr-adperf-mlflow.onrender.com
+        value: https://dagshub.com/Mohan-mlk/ad-performance-mlops.mlflow
       - key: HEALTH_PATH
         value: /_stcore/health

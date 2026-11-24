@@ -42,29 +42,35 @@ def load_json(path: str):
 
 
 
-@st.cache_data(ttl=20)
+@st.cache_data(ttl=300)
 def load_mlflow_experiments():
     from mlflow.tracking import MlflowClient
 
-    client = MlflowClient(tracking_uri=C.MLFLOW_TRACKING_URI)
-    experiments = client.search_experiments()
+    try:
+        client = MlflowClient(tracking_uri=C.MLFLOW_TRACKING_URI)
+        experiments = client.search_experiments()
+    except Exception as exc:  # noqa: BLE001 - cache transient tracker failures too
+        return [], str(exc)
     return [
         {"experiment_id": exp.experiment_id, "name": exp.name}
         for exp in experiments
         if exp.lifecycle_stage == "active"
-    ]
+    ], None
 
 
-@st.cache_data(ttl=20)
+@st.cache_data(ttl=300)
 def load_mlflow_runs(experiment_id: str):
     from mlflow.tracking import MlflowClient
 
-    client = MlflowClient(tracking_uri=C.MLFLOW_TRACKING_URI)
-    runs = client.search_runs(
-        [experiment_id],
-        order_by=["attributes.start_time DESC"],
-        max_results=50,
-    )
+    try:
+        client = MlflowClient(tracking_uri=C.MLFLOW_TRACKING_URI)
+        runs = client.search_runs(
+            [experiment_id],
+            order_by=["attributes.start_time DESC"],
+            max_results=50,
+        )
+    except Exception as exc:  # noqa: BLE001 - cache transient tracker failures too
+        return [], str(exc)
     return [
         {
             "run_id": run.info.run_id,
@@ -75,7 +81,7 @@ def load_mlflow_runs(experiment_id: str):
             "params": run.data.params,
         }
         for run in runs
-    ]
+    ], None
 
 
 def predict_one(bundle, plan: dict) -> float:
@@ -278,12 +284,24 @@ with tab_monitor:
 # ---------------------------------------------------------------- MLflow
 with tab_mlflow:
     st.subheader("Training runs from the connected MLflow tracker")
-    st.caption(f"Tracking URI: `{C.MLFLOW_TRACKING_URI}` · refreshes every 20 seconds")
-    try:
-        experiments = load_mlflow_experiments()
-    except Exception as exc:  # noqa: BLE001 - show tracker status in the dashboard
-        st.error(f"Cannot reach the MLflow tracking server: {exc}")
-        st.info("Start the MLflow service with `docker compose up -d mlflow` and refresh this page.")
+    st.caption(
+        f"Tracking URI: `{C.MLFLOW_TRACKING_URI}` · results are cached for 5 minutes"
+    )
+    if st.button("Refresh MLflow data", key="refresh_mlflow_data"):
+        load_mlflow_experiments.clear()
+        load_mlflow_runs.clear()
+        st.rerun()
+
+    experiments, tracker_error = load_mlflow_experiments()
+    if tracker_error:
+        if "429" in tracker_error or "Too Many Requests" in tracker_error:
+            st.warning(
+                "The tracker rate-limited this request. The error is cached to avoid "
+                "repeated calls; wait a few minutes before refreshing.",
+                title="MLflow tracker rate limit",
+            )
+        else:
+            st.error(f"Cannot reach the MLflow tracking server: {tracker_error}")
     else:
         if not experiments:
             st.info("No active MLflow experiments are available yet. Run a training job to create one.")
@@ -291,13 +309,17 @@ with tab_mlflow:
             names = {exp["name"]: exp["experiment_id"] for exp in experiments}
             exp_name = st.selectbox("Experiment", list(names))
             experiment_id = names[exp_name]
-            try:
-                runs = load_mlflow_runs(experiment_id)
-            except Exception as exc:  # noqa: BLE001 - keep the rest of the dashboard usable
-                st.error(f"Could not load MLflow runs: {exc}")
-                runs = []
-
-            if not runs:
+            runs, runs_error = load_mlflow_runs(experiment_id)
+            if runs_error:
+                if "429" in runs_error or "Too Many Requests" in runs_error:
+                    st.warning(
+                        "The tracker rate-limited this request. The error is cached to "
+                        "avoid repeated calls; wait a few minutes before refreshing.",
+                        title="MLflow tracker rate limit",
+                    )
+                else:
+                    st.error(f"Could not load MLflow runs: {runs_error}")
+            elif not runs:
                 st.info("This experiment has no training runs yet.")
             else:
                 run_rows = []

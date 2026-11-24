@@ -157,17 +157,15 @@ This uses the same training function as `make train`; it calls `dagshub.init`
 first so the regular MLflow parameters, evaluation metrics, lineage, artifacts,
 and model are recorded in the DagsHub experiment. DagsHub may open an OAuth
 authorization page on the first run. The DagsHub page above then shows the new
-run. The dashboard on Render continues to show runs from its separately
-configured Render MLflow service.
+run. The Render dashboard uses this DagsHub tracker for its MLflow lineage tab.
 
-### Train and log a run to the Render MLflow service
+### Train and log a run to the legacy Render MLflow service
 
-The hosted tracker is deployed at
-[`asr-adperf-mlflow.onrender.com`](https://asr-adperf-mlflow.onrender.com/), and
-the dashboard points to it. The tracker seeds its project datasets and release
-artifacts when the updated image starts. To add a real model run with the training
-parameters and train/validation/test datasets, run this in PowerShell from the
-project root:
+The legacy Render tracker remains available at
+[`asr-adperf-mlflow.onrender.com`](https://asr-adperf-mlflow.onrender.com/), but
+the dashboard now reads the persistent project experiment from DagsHub. To add a
+new model-training run to DagsHub, build the weekly features and run the DagsHub
+training script above. This older command sequence sends runs only to Render:
 
 ```powershell
 $env:PYTHONPATH = "src"
@@ -177,16 +175,17 @@ py -3 scripts/train-render.py
 ```
 
 The first two commands build the synthetic weekly training dataset. The last
-trains the model locally and logs its run to the hosted Render tracker. Keep
-the inputs synthetic because this MLflow page is public.
+trains the model locally and logs its run to the legacy Render tracker. Keep
+the inputs synthetic because the public tracker is visible to others.
 
 ## Stable public deployment
 
 This repository includes a Render Blueprint that builds the dashboard, API,
 and MLflow tracking UI from this repository's Dockerfile after GitHub Actions
-checks pass. The dashboard is configured to query the hosted MLflow service,
-so its **MLflow runs** tab shows records from that deployed tracker rather than
-a separate local database.
+checks pass. The dashboard queries the project's DagsHub MLflow tracker, so its
+**MLflow lineage** tab shows the finished project run and subsequent DagsHub
+training runs. The legacy Render tracker is separate and is no longer used by
+the dashboard.
 
 1. Push to `main`. After lint, tests, training, rolling-origin backtest, model
    quality gates and container smoke check succeed. GitHub Actions also
@@ -200,10 +199,9 @@ a separate local database.
 3. Render is configured to auto-deploy after the GitHub checks pass.
 
 The Blueprint uses Render's free plan for a student demo. Free services can
-sleep while idle, and the hosted MLflow SQLite database and artifacts use
-ephemeral storage, so a restart or redeploy can clear run history. Durable
-tracking requires persistent storage on a paid service or a managed database
-and artifact store. The MLflow UI is public and has no sign-in; keep only
+sleep while idle. MLflow experiment tracking and artifacts are stored in the
+DagsHub-hosted tracker rather than the Render SQLite service, so a Render
+restart does not clear the project run. The DagsHub tracker is public; keep only
 synthetic, non-sensitive experiment data there. Do not upload real customer or
 advertising account data to the public repository, image, or tracker.
 
