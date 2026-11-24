@@ -124,22 +124,25 @@ currently loads that bundle directly at startup. MLflow records and registers
 training outputs for review, but deployment does not yet promote a registry
 version automatically.
 
-### Publish the release metrics to DagsHub MLflow
+### Publish the project datasets and artifacts to DagsHub MLflow
 
 The project is mirrored at
 [`Mohan-mlk/ad-performance-mlops`](https://dagshub.com/Mohan-mlk/ad-performance-mlops),
-which provides a hosted MLflow tracker. To publish the committed synthetic
-release metrics to its `asr-ad-performance` experiment, run this from the
-project root:
+which provides a hosted MLflow tracker. To publish the project's synthetic
+raw and weekly datasets, chronological train/validation/test dataset lineage,
+release model, metrics, insights, drift report, backtest summary, and lineage
+manifest to its `asr-ad-performance` experiment, run this from the project root:
 
 ```powershell
-py -3 scripts/publish-release-metrics-to-dagshub.py
+py -3 scripts/publish-project-run-to-dagshub.py
 ```
 
-The script opens DagsHub's expiring OAuth authorization flow, logs the
-metrics from `artifacts/metrics.json`, then prints a direct run link. The DagsHub
-client keeps its token in your user profile outside the repository so later
-training runs can reuse it; never commit a token or real customer data. The tracker is at
+The script opens DagsHub's OAuth authorization flow on first use and prints a
+direct link to the finished run. The MLflow run stores dataset profiles and
+hashes under **Datasets**, and the Parquet data plus project outputs under
+**Artifacts**. DagsHub keeps its token in your user profile outside the
+repository so later training runs can reuse it. Never commit a token or real
+customer data; this demo uses synthetic data only. The tracker is at
 [`ad-performance-mlops.mlflow`](https://dagshub.com/Mohan-mlk/ad-performance-mlops.mlflow).
 
 To send a **new model training run** to that hosted experiment, first build the
